@@ -44,3 +44,7 @@ build/
 *.diff
 *.patch
 *.tmp
+
+### Dev configs ###
+dockerdev/
+dockerdev
