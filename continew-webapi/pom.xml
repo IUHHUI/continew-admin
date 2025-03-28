@@ -55,6 +55,12 @@
             <artifactId>continew-plugin-generator</artifactId>
         </dependency>
 
+        <!-- 引入auto sky模块 -->
+        <dependency>
+            <groupId>top.continew</groupId>
+            <artifactId>continew-auto-sky</artifactId>
+        </dependency>
+
         <!-- Liquibase（用于管理数据库版本，跟踪、管理和应用数据库变化） -->
         <dependency>
             <groupId>org.liquibase</groupId>
