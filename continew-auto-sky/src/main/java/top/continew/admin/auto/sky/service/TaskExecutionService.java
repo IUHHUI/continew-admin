@@ -1,0 +1,15 @@
+package top.continew.admin.auto.sky.service;
+
+import top.continew.starter.extension.crud.service.BaseService;
+import top.continew.admin.auto.sky.model.query.TaskExecutionQuery;
+import top.continew.admin.auto.sky.model.req.TaskExecutionReq;
+import top.continew.admin.auto.sky.model.resp.TaskExecutionDetailResp;
+import top.continew.admin.auto.sky.model.resp.TaskExecutionResp;
+
+/**
+ * 执行情况业务接口
+ *
+ * @author wjh
+ * @since 2025/03/29 20:49
+ */
+public interface TaskExecutionService extends BaseService<TaskExecutionResp, TaskExecutionDetailResp, TaskExecutionQuery, TaskExecutionReq> {}

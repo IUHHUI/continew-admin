@@ -1,0 +1,68 @@
+package top.continew.admin.auto.sky.model.query;
+
+import lombok.Data;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import top.continew.starter.data.core.annotation.Query;
+import top.continew.starter.data.core.enums.QueryType;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.*;
+
+/**
+ * cami查询条件
+ *
+ * @author wjh
+ * @since 2025/03/29 20:49
+ */
+@Data
+@Schema(description = "cami查询条件")
+public class CamiQuery implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * UUID
+     */
+    @Schema(description = "UUID")
+    @Query(type = QueryType.LIKE)
+    private String cami;
+
+    /**
+     * 订单编号
+     */
+    @Schema(description = "订单编号")
+    @Query(type = QueryType.LIKE)
+    private String orderId;
+
+    /**
+     * 创建人
+     */
+    @Schema(description = "创建人")
+    @Query(type = QueryType.EQ)
+    private Long createUser;
+
+    /**
+     * 修改人
+     */
+    @Schema(description = "修改人")
+    @Query(type = QueryType.EQ)
+    private Long updateUser;
+
+    /**
+     * 状态
+     */
+    @Schema(description = "状态")
+    @Query(type = QueryType.EQ)
+    private Integer state;
+
+    /**
+     * 设备ID
+     */
+    @Schema(description = "设备ID")
+    @Query(type = QueryType.EQ)
+    private String deviceId;
+}
