@@ -82,3 +82,17 @@ CREATE TABLE IF NOT EXISTS `game_task_execution` (
     PRIMARY KEY (id),
     UNIQUE INDEX game_task_exec_begin (begin_time)
 )  ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COMMENT='任务执行情况';
+
+-- ----------------------------
+-- Table structure for game_device
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `game_device` (
+    `id` BIGINT(20) NOT NULL COMMENT '设备ID',
+    name VARCHAR(255) NOT NULL COMMENT '在线情况',
+    type BOOLEAN DEFAULT FALSE COMMENT '设备类型,true:登号机, false:业务机.',
+    ip VARCHAR(255) NOT NULL COMMENT '设备IP',
+    state BOOLEAN DEFAULT FALSE COMMENT '在线情况',
+    connect_time DATETIME DEFAULT NULL COMMENT '通信时间',
+    create_time DATETIME NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (id),
+)  ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COMMENT='设备';
