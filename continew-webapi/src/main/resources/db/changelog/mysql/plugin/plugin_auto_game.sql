@@ -89,10 +89,12 @@ CREATE TABLE IF NOT EXISTS `game_task_execution` (
 CREATE TABLE IF NOT EXISTS `game_device` (
     `id` BIGINT(20) NOT NULL COMMENT '设备ID',
     name VARCHAR(255) NOT NULL COMMENT '在线情况',
-    type BOOLEAN DEFAULT FALSE COMMENT '设备类型,true:登号机, false:业务机.',
-    ip VARCHAR(255) NOT NULL COMMENT '设备IP',
-    state BOOLEAN DEFAULT FALSE COMMENT '在线情况',
-    connect_time DATETIME DEFAULT NULL COMMENT '通信时间',
-    create_time DATETIME NOT NULL COMMENT '创建时间',
+    `type`      tinyint(1)   UNSIGNED NOT NULL DEFAULT 0 COMMENT '设备类型（1：登号机；0：业务机）',
+    ip VARCHAR(255) DEFAULT NULL COMMENT '设备IP',
+    `state`      tinyint(1)   UNSIGNED NOT NULL DEFAULT 0 COMMENT '状态（1：online；0：offline）',
+    `create_user` bigint(20)   NOT NULL                    COMMENT '创建人',
+    `create_time` datetime     NOT NULL                    COMMENT '创建时间',
+    `update_user` bigint(20)   DEFAULT NULL                COMMENT '修改人',
+    `update_time` datetime     DEFAULT NULL                COMMENT '修改时间',
     PRIMARY KEY (`id`)
 )  ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COMMENT='设备';
