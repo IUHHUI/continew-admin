@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS `game_cami` (
     cami VARCHAR(63) DEFAULT (uuid()) COMMENT 'UUID字符串',
     norm VARCHAR(255) DEFAULT '' COMMENT '卡密信息描述',
     order_id VARCHAR(255) NOT NULL COMMENT '网点订单编号',
+    is_urgent BOOLEAN DEFAULT FALSE COMMENT '是否紧急',
     days INT DEFAULT 1 COMMENT '任务天数',
     task_spec VARCHAR(255) DEFAULT '{}' COMMENT '每日任务（JSON字符串）',
-    login_uri VARCHAR(255) NOT NULL COMMENT '',
     `create_user` bigint(20)   NOT NULL                    COMMENT '创建人',
     `create_time` datetime     NOT NULL                    COMMENT '创建时间',
     `update_user` bigint(20)   DEFAULT NULL                COMMENT '修改人',
@@ -25,10 +25,7 @@ CREATE TABLE IF NOT EXISTS `game_cami` (
     is_positive_review BOOLEAN DEFAULT FALSE COMMENT '是否为正面评价',
     is_del Boolean DEFAULT FALSE COMMENT '标记为删除',
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `game_cami`(`cami`),
-    UNIQUE INDEX `game_order`(`order_id`),
-    UNIQUE INDEX `game_create_user`(`create_user`),
-    UNIQUE INDEX `game_update_user`(`update_user`)
+    UNIQUE INDEX `game_cami`(`cami`)
 )  ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT =  'cami';
 
 CREATE TABLE IF NOT EXISTS `game_task` (
@@ -49,38 +46,32 @@ CREATE TABLE IF NOT EXISTS `game_task` (
     is_urgent BOOLEAN DEFAULT FALSE COMMENT '是否紧急',
     game_account VARCHAR(255) DEFAULT '' COMMENT 'game账号',
     is_del Boolean DEFAULT FALSE COMMENT '标记为删除',
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `game_order`(`order_id`),
-    UNIQUE INDEX `game_create_user`(`create_user`),
-    UNIQUE INDEX `game_update_user`(`update_user`)
+    PRIMARY KEY (`id`)
 )  ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT =  '任务';
 
 CREATE TABLE IF NOT EXISTS `game_task_cami` (
     `id`          bigint(20)   NOT NULL AUTO_INCREMENT     COMMENT 'ID',
     version INT DEFAULT 1 COMMENT '版本号',
-    task_id INT NOT NULL COMMENT '任务Id',
+    task_id bigint(20) NOT NULL COMMENT '任务Id',
     `create_user` bigint(20)   NOT NULL                    COMMENT '创建人',
     `create_time` datetime     NOT NULL                    COMMENT '创建时间',
     `update_user` bigint(20)   DEFAULT NULL                COMMENT '修改人',
     `update_time` datetime     DEFAULT NULL                COMMENT '修改时间',
-    cami_id INT NOT NULL COMMENT 'camiId',
+    cami_id bigint(20) NOT NULL COMMENT 'camiId',
     is_self_cami Boolean DEFAULT FALSE COMMENT 'true:自定义卡密, false:附加卡密',
     is_del BOOLEAN DEFAULT FALSE COMMENT '标记为删除',
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `game_task_id`(`task_id`),
-    UNIQUE INDEX `game_cami_id`(`cami_id`)
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT =  'task-cami';
 
 CREATE TABLE IF NOT EXISTS `game_task_execution` (
     `id`          bigint(20)   NOT NULL AUTO_INCREMENT     COMMENT 'ID',
     version INT DEFAULT 1 COMMENT '版本号',
-    task_id INT NOT NULL COMMENT '任务Id',
+    task_id bigint(20) NOT NULL COMMENT '任务Id',
     begin_time DATETIME NOT NULL COMMENT 'begin执行时间',
     end_time DATETIME DEFAULT NULL COMMENT 'end执行时间',
     msg VARCHAR(512) DEFAULT '{}' COMMENT '任务消息记录(json)',
     is_del BOOLEAN DEFAULT FALSE COMMENT '标记为删除',
-    PRIMARY KEY (id),
-    UNIQUE INDEX game_task_exec_begin (begin_time)
+    PRIMARY KEY (id)
 )  ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COMMENT='任务执行情况';
 
 -- ----------------------------
@@ -88,6 +79,7 @@ CREATE TABLE IF NOT EXISTS `game_task_execution` (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `game_device` (
     `id` BIGINT(20) NOT NULL COMMENT '设备ID',
+    `device` VARCHAR(255) NOT NULL COMMENT '设备device id',
     name VARCHAR(255) NOT NULL COMMENT '在线情况',
     `type`      tinyint(1)   UNSIGNED NOT NULL DEFAULT 0 COMMENT '设备类型（1：登号机；0：业务机）',
     ip VARCHAR(255) DEFAULT NULL COMMENT '设备IP',
@@ -96,5 +88,6 @@ CREATE TABLE IF NOT EXISTS `game_device` (
     `create_time` datetime     NOT NULL                    COMMENT '创建时间',
     `update_user` bigint(20)   DEFAULT NULL                COMMENT '修改人',
     `update_time` datetime     DEFAULT NULL                COMMENT '修改时间',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    INDEX `game_device`(`device`)
 )  ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COMMENT='设备';
