@@ -18,47 +18,31 @@ package top.continew.admin.auto.sky.model.entity;
 
 import lombok.Data;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-
-import top.continew.admin.common.model.entity.BaseDO;
-
-import java.io.Serial;
-
 /**
- * task-cami实体
- *
- * @author wjh
- * @since 2025/03/29 20:49
+ * Game Logging info
  */
 @Data
-@TableName("game_task_cami")
-public class TaskCamiDO extends BaseDO {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
+public class GameLoggingInfo {
     /**
-     * 版本号
+     * 文件类型
      */
-    private Integer version;
-
+    private String cami;
+    private String randNum;
     /**
-     * 任务Id
+     * <pre>
+     * { label: 'enable login', value: 1 },
+     * { label: 'submit login', value: 2 },
+     * { label: 'running login', value: 3 },
+     * { label: 'had logined', value: 4 },
+     * </pre>
      */
-    private Long taskId;
-
-    /**
-     * camiId
-     */
-    private Long camiId;
-
-    /**
-     * 卡密类型
-     */
-    private Boolean isSelfCami;
-
-    /**
-     * 标记为删除
-     */
-    private Boolean isDel;
+    private Integer channel;
+    private Integer state;
+    private Integer type;
+    private String phone;
+    private String password;
+    private String sms;
+    private String qrCode;
+    private String email;
+    private String device;
 }

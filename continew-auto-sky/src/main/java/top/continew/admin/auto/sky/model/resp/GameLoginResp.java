@@ -14,47 +14,36 @@
  * limitations under the License.
  */
 
-package top.continew.admin.auto.sky.model.entity;
+package top.continew.admin.auto.sky.model.resp;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
-import com.baomidou.mybatisplus.annotation.TableName;
-
-import top.continew.admin.common.model.entity.BaseDO;
-
 import java.io.Serial;
+import java.io.Serializable;
 
 /**
- * 设备实体
- *
- * @author wjh
- * @since 2025/04/05 19:41
+ * Game Login Resp.
  */
 @Data
-@TableName("game_device")
-public class DeviceDO extends BaseDO {
+@Schema(description = "游戏登录情况信息")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class GameLoginResp implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private String device;
     /**
-     * 名称
+     * {@link top.continew.admin.auto.sky.model.entity.GameLoginState}
      */
-    private String name;
-
-    /**
-     * 设备类型
-     */
-    private Integer type;
-
-    /**
-     * 设备IP
-     */
-    private String ip;
-
-    /**
-     * 在线情况
-     */
+    @Schema(description = "登录状态")
     private Integer state;
+    @Schema(description = "登录类型:1手机密码,2邮箱密码,3手机验证码,4二维码")
+    private Integer type;
+    @Schema(description = "手机号")
+    private String phone;
+    @Schema(description = "邮箱")
+    private String email;
+    @Schema(description = "二维码地址")
+    private String qrCode;
 }

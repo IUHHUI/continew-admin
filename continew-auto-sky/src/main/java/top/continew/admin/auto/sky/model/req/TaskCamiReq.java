@@ -44,14 +44,14 @@ public class TaskCamiReq implements Serializable {
      */
     @Schema(description = "任务Id")
     @NotNull(message = "任务Id不能为空")
-    private Integer taskId;
+    private Long taskId;
 
     /**
      * camiId
      */
     @Schema(description = "camiId")
     @NotNull(message = "camiId不能为空")
-    private Integer camiId;
+    private Long camiId;
 
     /**
      * 卡密类型

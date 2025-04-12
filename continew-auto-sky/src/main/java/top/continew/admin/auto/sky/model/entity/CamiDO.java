@@ -58,6 +58,11 @@ public class CamiDO extends BaseDO {
     private String orderId;
 
     /**
+     * 是否紧急
+     */
+    private Boolean isUrgent;
+
+    /**
      * 任务天数
      */
     private Integer days;
@@ -68,7 +73,8 @@ public class CamiDO extends BaseDO {
     private String taskSpec;
 
     /**
-     * 状态
+     * 状态.
+     * 1: 未使用 2: 在使用 3: 已使用
      */
     private Integer state;
 

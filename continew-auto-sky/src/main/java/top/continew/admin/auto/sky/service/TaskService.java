@@ -16,6 +16,9 @@
 
 package top.continew.admin.auto.sky.service;
 
+import top.continew.admin.auto.sky.model.req.GameClientLoginReq;
+import top.continew.admin.auto.sky.model.req.GameLoginReq;
+import top.continew.admin.auto.sky.model.resp.GameLoginResp;
 import top.continew.starter.extension.crud.service.BaseService;
 import top.continew.admin.auto.sky.model.query.TaskQuery;
 import top.continew.admin.auto.sky.model.req.TaskReq;
@@ -28,4 +31,30 @@ import top.continew.admin.auto.sky.model.resp.TaskResp;
  * @author wjh
  * @since 2025/03/29 20:49
  */
-public interface TaskService extends BaseService<TaskResp, TaskDetailResp, TaskQuery, TaskReq> {}
+public interface TaskService extends BaseService<TaskResp, TaskDetailResp, TaskQuery, TaskReq> {
+
+    /**
+     * 游戏登录状态
+     *
+     * @param req 登录参数
+     * @return 登录状态
+     */
+    GameLoginResp gameLoginState(GameLoginReq req);
+
+    /**
+     * 打开游戏, 选择二维码登录或者输入手机号
+     * 
+     * @param req 登录参数
+     * @return 登录状态
+     */
+    void gameLogin1(GameLoginReq req);
+
+    /**
+     * 游戏登录状态
+     *
+     * @param req 登录参数
+     */
+    void gameLogin2(GameLoginReq req);
+
+    void updateGameLoginState(GameClientLoginReq req);
+}
