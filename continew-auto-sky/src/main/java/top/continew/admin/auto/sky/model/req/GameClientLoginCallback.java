@@ -24,7 +24,7 @@ import java.io.Serializable;
 
 @Data
 @Schema(description = "游戏登录参数")
-public class GameClientLoginReq implements Serializable {
+public class GameClientLoginCallback implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -34,14 +34,31 @@ public class GameClientLoginReq implements Serializable {
      */
     @Schema(description = "卡密")
     @NotNull(message = "卡密不能为空")
-    private String camiUuid;
+    private String cami;
+
     @Schema(description = "设备device id")
-    @NotNull(message = "设备device id")
+    @NotNull(message = "设备device id不能为空")
     private String device;
+
     @Schema(description = "游戏渠道")
+    @NotNull(message = "手机号不能为空")
     private Integer channel;
+
     @Schema(description = "登录类型:1手机密码,2邮箱密码,3手机验证码,4二维码")
+    @NotNull(message = "手机号不能为空")
     private Integer type;
+
     @Schema(description = "手机号")
+    @NotNull(message = "手机号不能为空")
     private String phone;
+
+    /**
+     * {@link top.continew.admin.auto.sky.model.entity.GameLoginState}
+     */
+    @Schema(description = "登录状态")
+    @NotNull(message = "登录状态不能为空")
+    private int state;
+
+    @Schema(description = "二维码地址")
+    private String qrCode;
 }

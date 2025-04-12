@@ -21,6 +21,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.continew.admin.auto.sky.mapper.CamiMapper;
 import top.continew.admin.auto.sky.mapper.DeviceMapper;
@@ -28,7 +30,7 @@ import top.continew.admin.auto.sky.mapper.TaskCamiMapper;
 import top.continew.admin.auto.sky.mapper.TaskMapper;
 import top.continew.admin.auto.sky.model.entity.*;
 import top.continew.admin.auto.sky.model.query.TaskQuery;
-import top.continew.admin.auto.sky.model.req.GameClientLoginReq;
+import top.continew.admin.auto.sky.model.req.GameClientLoginCallback;
 import top.continew.admin.auto.sky.model.req.GameLoginReq;
 import top.continew.admin.auto.sky.model.req.TaskCamiReq;
 import top.continew.admin.auto.sky.model.req.TaskReq;
@@ -36,7 +38,6 @@ import top.continew.admin.auto.sky.model.resp.GameLoginResp;
 import top.continew.admin.auto.sky.model.resp.TaskDetailResp;
 import top.continew.admin.auto.sky.model.resp.TaskResp;
 import top.continew.admin.auto.sky.service.TaskService;
-import top.continew.admin.common.context.UserContextHolder;
 import top.continew.starter.core.validation.CheckUtils;
 import top.continew.starter.extension.crud.service.BaseServiceImpl;
 import java.time.LocalDateTime;
@@ -55,8 +56,11 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskResp, TaskDetailResp, TaskQuery, TaskReq> implements TaskService {
+    @Autowired
     private CamiMapper camiMapper;
+    @Autowired
     private TaskCamiMapper taskCamiMapper;
+    @Autowired
     private DeviceMapper deviceMapper;
 
     // 缓存游戏登录信息
@@ -68,15 +72,15 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
     @Override
     public GameLoginResp gameLoginState(GameLoginReq req) {
         var cami = camiMapper.lambdaQuery()
-            .select(CamiDO::getCami, CamiDO::getCreateTime, CamiDO::getLoginInfo)
-            .eq(CamiDO::getCami, req.getCamiUuid())
+            .select(CamiDO::getId, CamiDO::getCami, CamiDO::getState, CamiDO::getIsUrgent, CamiDO::getCreateTime, CamiDO::getCreateUser)
+            .eq(CamiDO::getCami, req.getCami())
             .one();
         CheckUtils.throwIfNull(cami, "卡密不存在");
-        CheckUtils.throwIf(Long.parseLong(req.getRandNum()) == cami.getCreateTime()
+        CheckUtils.throwIfNotEqual(Long.parseLong(req.getRandNum()), cami.getCreateTime()
             .atZone(ZoneId.systemDefault())
             .toInstant()
             .toEpochMilli(), "卡密不存在");
-        CheckUtils.throwIf(cami.getState() == 1, "卡密已使用");
+        CheckUtils.throwIf(cami.getState() == CamiState.USED.getState(), "卡密已使用");
         //卡密还没有被使用.
         var gameLogging = gameLoggingCache.getIfPresent(cami.getCami());
         GameLoginResp resp = new GameLoginResp();
@@ -91,26 +95,26 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
     }
 
     /**
-     * 对应短信认证码和二维码登录.
+     * 游戏登录状态.
      *
      * @param req 登录参数
      */
     @Override
-    public void gameLogin1(GameLoginReq req) {
+    public void gameLoginSubmit(GameLoginReq req) {
         checkLoginReq(req);
-        var cami = camiMapper.lambdaQuery()
-            .select(CamiDO::getCami, CamiDO::getCreateTime, CamiDO::getLoginInfo, CamiDO::getOrderId)
-            .eq(CamiDO::getCami, req.getCamiUuid())
+        var camiDO = camiMapper.lambdaQuery()
+            .select(CamiDO::getId, CamiDO::getCami, CamiDO::getState, CamiDO::getIsUrgent, CamiDO::getCreateTime, CamiDO::getCreateUser)
+            .eq(CamiDO::getCami, req.getCami())
             .one();
         CheckUtils.throwIfNull(req.getChannel(), "渠道不能为空");
-        CheckUtils.throwIfNull(cami, "卡密不存在");
-        CheckUtils.throwIf(cami.getState() != 1, "卡密已使用");
-        CheckUtils.throwIf(Long.parseLong(req.getRandNum()) == cami.getCreateTime()
+        CheckUtils.throwIfNull(camiDO, "卡密不存在");
+        CheckUtils.throwIfNotEqual(Long.parseLong(req.getRandNum()), camiDO.getCreateTime()
             .atZone(ZoneId.systemDefault())
             .toInstant()
             .toEpochMilli(), "卡密不存在");
+        CheckUtils.throwIf(camiDO.getState() == CamiState.USED.getState(), "卡密已使用");
 
-        var gameLogging = gameLoggingCache.getIfPresent(cami.getCami());
+        var gameLogging = gameLoggingCache.getIfPresent(camiDO.getCami());
         if (gameLogging != null) {
             CheckUtils.throwIf(Objects.equals(gameLogging.getState(), GameLoginState.LOGIN_SUCCESS
                 .getState()), "已经登录成功");
@@ -118,6 +122,26 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
                 .getState()), "正在登录");
             CheckUtils.throwIf(Objects.equals(gameLogging.getState(), GameLoginState.LOGGING_2.getState()), "正在登录");
         }
+
+        if (Objects.equals(req.getType(), GameLoginType.QR_CODE.getType())) {
+            this.gameLoginSubmit1(req, camiDO);
+        } else if (Objects.equals(req.getType(), GameLoginType.PHONE_SMS.getType())) {
+            if (StringUtils.isBlank(req.getSms())) {
+                this.gameLoginSubmit1(req, camiDO);
+            } else {
+                this.gameLoginSubmit2(req, camiDO);
+            }
+        } else {
+            this.gameLoginSubmit2(req, camiDO);
+        }
+    }
+
+    /**
+     * 对应短信认证码和二维码登录.
+     *
+     * @param req 登录参数
+     */
+    private void gameLoginSubmit1(GameLoginReq req, CamiDO camiDO) {
         var newGameLogging = new GameLoggingInfo();
         BeanUtil.copyProperties(req, newGameLogging);
         //获取上号设备
@@ -125,31 +149,10 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
         CheckUtils.throwIfNull(device, "没有上号设备");
         newGameLogging.setState(GameLoginState.LOGGING_1_BEGIN.getState());
         newGameLogging.setDevice(device.getDevice());
-        gameLoggingCache.put(cami.getCami(), newGameLogging);
+        gameLoggingCache.put(camiDO.getCami(), newGameLogging);
     }
 
-    @Override
-    public void gameLogin2(GameLoginReq req) {
-        checkLoginReq(req);
-        var cami = camiMapper.lambdaQuery()
-            .select(CamiDO::getCami, CamiDO::getCreateTime, CamiDO::getLoginInfo, CamiDO::getOrderId)
-            .eq(CamiDO::getCami, req.getCamiUuid())
-            .one();
-        CheckUtils.throwIfNull(cami, "卡密不存在");
-        CheckUtils.throwIf(Long.parseLong(req.getRandNum()) == cami.getCreateTime()
-            .atZone(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli(), "卡密不存在");
-        CheckUtils.throwIf(cami.getState() == 3, "卡密已使用");
-
-        var gameLogging = gameLoggingCache.getIfPresent(cami.getCami());
-        if (gameLogging != null) {
-            CheckUtils.throwIf(Objects.equals(gameLogging.getState(), GameLoginState.LOGIN_SUCCESS
-                .getState()), "已经登录成功");
-            CheckUtils.throwIf(Objects.equals(gameLogging.getState(), GameLoginState.LOGGING_1_BEGIN
-                .getState()), "正在登录");
-            CheckUtils.throwIf(Objects.equals(gameLogging.getState(), GameLoginState.LOGGING_2.getState()), "正在登录");
-        }
+    private void gameLoginSubmit2(GameLoginReq req, CamiDO camiDO) {
         var newGameLogging = new GameLoggingInfo();
         BeanUtil.copyProperties(req, newGameLogging);
         //获取上号设备
@@ -157,22 +160,60 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
         CheckUtils.throwIfNull(device, "没有上号设备");
         newGameLogging.setState(GameLoginState.LOGGING_2.getState());
         newGameLogging.setDevice(device.getDevice());
-        gameLoggingCache.put(cami.getCami(), newGameLogging);
+        gameLoggingCache.put(camiDO.getCami(), newGameLogging);
     }
 
     @Override
-    public void updateGameLoginState(GameClientLoginReq req) {
-        log.info("更新游戏登录状态:{}", req);
+    public void gameClientLoginCallback(GameClientLoginCallback info) {
+        log.info("更新游戏登录状态:{}", info);
 
-        var gameLogging = gameLoggingCache.getIfPresent(req.getCamiUuid());
+        //verify device.
+        var device = deviceMapper.lambdaQuery()
+            .select(DeviceDO::getId, DeviceDO::getDevice, DeviceDO::getState)
+            .eq(DeviceDO::getDevice, info.getDevice())
+            .one();
+        CheckUtils.throwIfNull(device, "设备不存在");
+
+        var gameLogging = gameLoggingCache.getIfPresent(info.getCami());
         CheckUtils.throwIfNull(gameLogging, "游戏登录状态不存在");
-        CheckUtils.throwIf(!Objects.equals(gameLogging.getDevice(), req.getDevice()), "设备不匹配");
+        CheckUtils.throwIf(!Objects.equals(gameLogging.getDevice(), info.getDevice()), "设备不匹配");
         var camiDO = camiMapper.lambdaQuery()
-            .select(CamiDO::getCami, CamiDO::getCreateTime, CamiDO::getLoginInfo, CamiDO::getOrderId)
-            .eq(CamiDO::getCami, req.getCamiUuid())
+            .select(CamiDO::getId, CamiDO::getCami, CamiDO::getState, CamiDO::getIsUrgent, CamiDO::getCreateTime, CamiDO::getCreateUser)
+            .eq(CamiDO::getCami, info.getCami())
             .one();
         CheckUtils.throwIfNull(camiDO, "卡密不存在");
 
+        if (!(Objects.equals(info.getDevice(), gameLogging.getDevice()) && Objects.equals(info.getPhone(), gameLogging
+            .getPhone()) && Objects.equals(info.getChannel(), gameLogging.getChannel()) && Objects.equals(info
+                .getType(), gameLogging.getType()))) {
+            CheckUtils.throwIf(true, "登录参数不匹配");
+        }
+
+        //GameLoginState.LOGGING_1_END, GameLoginState.LOGIN_FAIL, GameLoginState.LOGIN_SUCCESS
+        if (Objects.equals(info.getState(), GameLoginState.LOGGING_1_END.getState())) {
+            if (StringUtils.isNotBlank(info.getQrCode())) {
+                gameLogging.setType(GameLoginType.QR_CODE.getType());
+                gameLogging.setQrCode(info.getQrCode());
+            } else {
+                gameLogging.setType(info.getType());
+                gameLogging.setQrCode("");
+            }
+            gameLogging.setSms("");
+            gameLogging.setPassword("");
+            gameLogging.setState(GameLoginState.LOGGING_1_END.getState());
+            //update
+            gameLoggingCache.put(camiDO.getCami(), gameLogging);
+            return;
+        } else if (Objects.equals(info.getState(), GameLoginState.LOGIN_FAIL.getState())) {
+            gameLogging.setState(GameLoginState.LOGIN_FAIL.getState());
+            gameLoggingCache.put(camiDO.getCami(), gameLogging);
+            return;
+        } else if (!Objects.equals(info.getState(), GameLoginState.LOGIN_SUCCESS.getState())) {
+            log.error("invalid callback:{}", info);
+            return;
+        }
+
+        //game login success
         //create task
         TaskReq taskReq = new TaskReq();
         taskReq.setOrderId(camiDO.getOrderId());
@@ -183,6 +224,7 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
         taskReq.setChannel(gameLogging.getChannel().toString());
         var taskId = this.add(taskReq);
 
+        //associate task and cami
         TaskCamiReq taskCamiReq = new TaskCamiReq();
         taskCamiReq.setTaskId(taskId);
         taskCamiReq.setCamiId(camiDO.getId());
@@ -190,9 +232,14 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
         taskCamiDO.setIsSelfCami(true);
         taskCamiDO.setTaskId(taskId);
         taskCamiDO.setCamiId(camiDO.getId());
-        taskCamiDO.setCreateUser(UserContextHolder.getUserId());
+        taskCamiDO.setCreateUser(camiDO.getCreateUser());
         taskCamiDO.setCreateTime(LocalDateTime.now());
         taskCamiMapper.insert(taskCamiDO);
+
+        camiDO.setState(CamiState.USED.getState());
+        camiDO.setUpdateUser(camiDO.getCreateUser());
+        camiDO.setUpdateTime(LocalDateTime.now());
+        camiMapper.updateById(camiDO);
     }
 
     private void checkLoginReq(GameLoginReq req) {
@@ -208,7 +255,7 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
     private DeviceDO getDeviceForLogin() {
         //TODO
         var list = deviceMapper.lambdaQuery()
-            .select(DeviceDO::getId)
+            .select(DeviceDO::getId, DeviceDO::getDevice)
             .eq(DeviceDO::getState, 1)
             .eq(DeviceDO::getType, 1)
             .list();

@@ -72,6 +72,10 @@ public class SaTokenConfiguration {
             .check(r -> {
                 // 如果包含 sign，进行 API 接口参数签名验证
                 SaRequest saRequest = SaHolder.getRequest();
+                if (saRequest.getRequestPath().startsWith("/sky/task/login/")) {
+                    return;
+                }
+
                 List<String> paramNames = saRequest.getParamNames();
                 if (paramNames.stream().anyMatch(SaSignTemplate.sign::equals)) {
                     try {

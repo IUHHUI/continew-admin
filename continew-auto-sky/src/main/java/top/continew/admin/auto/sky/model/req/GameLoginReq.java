@@ -39,7 +39,7 @@ public class GameLoginReq implements Serializable {
      */
     @Schema(description = "卡密")
     @NotNull(message = "卡密不能为空")
-    private String camiUuid;
+    private String cami;
     @Schema(description = "时间戳")
     @NotNull(message = "时间戳不能为空")
     private String randNum;

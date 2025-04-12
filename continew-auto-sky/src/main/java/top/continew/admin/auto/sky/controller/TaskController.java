@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.continew.admin.auto.sky.model.query.TaskQuery;
-import top.continew.admin.auto.sky.model.req.GameClientLoginReq;
+import top.continew.admin.auto.sky.model.req.GameClientLoginCallback;
 import top.continew.admin.auto.sky.model.req.GameLoginReq;
 import top.continew.admin.auto.sky.model.req.TaskReq;
 import top.continew.admin.auto.sky.model.resp.GameLoginResp;
@@ -52,25 +52,17 @@ public class TaskController extends BaseController<TaskService, TaskResp, TaskDe
     }
 
     @Log(ignore = true)
-    @Operation(summary = "手机认证码,二维码上号", description = "手机认证码,二维码上号")
-    @GetMapping("/login1")
-    public GameLoginResp gameLogin1(GameLoginReq req) {
-        baseService.gameLogin1(req);
-        return baseService.gameLoginState(req);
-    }
-
-    @Log(ignore = true)
-    @Operation(summary = "手机/邮箱,密码上号", description = "手机/邮箱,密码上号")
-    @GetMapping("/login2")
-    public GameLoginResp gameLogin2(GameLoginReq req) {
-        baseService.gameLogin2(req);
+    @Operation(summary = "user上号", description = "user上号")
+    @GetMapping("/login/submit")
+    public GameLoginResp gameLoginSubmit(GameLoginReq req) {
+        baseService.gameLoginSubmit(req);
         return baseService.gameLoginState(req);
     }
 
     @Log(ignore = true)
     @Operation(summary = "手机更新上号状态", description = "手机更新上号状态")
-    @PostMapping("/login/update/client")
-    public void gameLogin(GameClientLoginReq req) {
-        baseService.updateGameLoginState(req);
+    @PostMapping("/client/login/callback")
+    public void clientLoginCallback(GameClientLoginCallback data) {
+        baseService.gameClientLoginCallback(data);
     }
 }
