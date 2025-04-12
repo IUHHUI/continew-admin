@@ -28,7 +28,7 @@ import java.io.Serial;
  * task-cami实体
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @TableName("game_task_cami")

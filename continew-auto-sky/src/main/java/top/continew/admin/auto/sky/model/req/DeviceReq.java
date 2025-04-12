@@ -32,7 +32,7 @@ import java.time.*;
  * 创建或修改设备参数
  *
  * @author wjh
- * @since 2025/04/05 19:41
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "创建或修改设备参数")
@@ -47,6 +47,14 @@ public class DeviceReq implements Serializable {
     @Schema(description = "设备ID")
     @NotNull(message = "设备ID不能为空")
     private Long id;
+
+    /**
+     * 设备device
+     */
+    @Schema(description = "设备device")
+    @NotBlank(message = "设备device不能为空")
+    @Length(max = 255, message = "设备device长度不能超过 {max} 个字符")
+    private String device;
 
     /**
      * 名称

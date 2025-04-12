@@ -34,7 +34,7 @@ import top.continew.admin.auto.sky.service.CamiService;
  * cami管理 API
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Tag(name = "cami管理 API")
 @RestController

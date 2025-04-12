@@ -23,6 +23,6 @@ import top.continew.admin.auto.sky.model.entity.CamiDO;
  * cami Mapper
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 public interface CamiMapper extends BaseMapper<CamiDO> {}

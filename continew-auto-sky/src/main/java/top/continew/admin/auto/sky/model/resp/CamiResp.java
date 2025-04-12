@@ -29,7 +29,7 @@ import java.time.*;
  * cami信息
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "cami信息")
@@ -55,6 +55,12 @@ public class CamiResp extends BaseResp {
      */
     @Schema(description = "订单编号")
     private String orderId;
+
+    /**
+     * 是否紧急
+     */
+    @Schema(description = "是否紧急")
+    private Boolean isUrgent;
 
     /**
      * 任务天数

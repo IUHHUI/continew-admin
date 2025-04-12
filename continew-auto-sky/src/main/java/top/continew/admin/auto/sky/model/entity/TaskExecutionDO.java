@@ -29,7 +29,7 @@ import java.time.*;
  * 执行情况实体
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @TableName("game_task_execution")
@@ -46,7 +46,7 @@ public class TaskExecutionDO extends BaseDO {
     /**
      * 任务Id
      */
-    private Integer taskId;
+    private Long taskId;
 
     /**
      * 开始时间

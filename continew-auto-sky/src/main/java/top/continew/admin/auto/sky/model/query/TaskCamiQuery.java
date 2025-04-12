@@ -31,7 +31,7 @@ import java.time.*;
  * task-cami查询条件
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "task-cami查询条件")
@@ -45,7 +45,14 @@ public class TaskCamiQuery implements Serializable {
      */
     @Schema(description = "任务Id")
     @Query(type = QueryType.EQ)
-    private Integer taskId;
+    private Long taskId;
+
+    /**
+     * 创建人
+     */
+    @Schema(description = "创建人")
+    @Query(type = QueryType.EQ)
+    private Long createUser;
 
     /**
      * 创建时间
@@ -59,5 +66,5 @@ public class TaskCamiQuery implements Serializable {
      */
     @Schema(description = "camiId")
     @Query(type = QueryType.EQ)
-    private Integer camiId;
+    private Long camiId;
 }

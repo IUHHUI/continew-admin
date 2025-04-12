@@ -30,7 +30,7 @@ import java.time.*;
  * 创建或修改task-cami参数
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "创建或修改task-cami参数")
@@ -45,6 +45,13 @@ public class TaskCamiReq implements Serializable {
     @Schema(description = "任务Id")
     @NotNull(message = "任务Id不能为空")
     private Long taskId;
+
+    /**
+     * 创建人
+     */
+    @Schema(description = "创建人")
+    @NotNull(message = "创建人不能为空")
+    private Long createUser;
 
     /**
      * camiId

@@ -31,7 +31,7 @@ import java.time.*;
  * 设备查询条件
  *
  * @author wjh
- * @since 2025/04/05 19:41
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "设备查询条件")
@@ -46,6 +46,13 @@ public class DeviceQuery implements Serializable {
     @Schema(description = "设备ID")
     @Query(type = QueryType.EQ)
     private Long id;
+
+    /**
+     * 设备device
+     */
+    @Schema(description = "设备device")
+    @Query(type = QueryType.EQ)
+    private String device;
 
     /**
      * 设备类型

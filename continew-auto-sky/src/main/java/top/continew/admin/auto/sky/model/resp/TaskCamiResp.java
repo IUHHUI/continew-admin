@@ -29,7 +29,7 @@ import java.time.*;
  * task-cami信息
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "task-cami信息")
@@ -42,7 +42,13 @@ public class TaskCamiResp extends BaseResp {
      * 任务Id
      */
     @Schema(description = "任务Id")
-    private Integer taskId;
+    private Long taskId;
+
+    /**
+     * 修改人
+     */
+    @Schema(description = "修改人")
+    private Long updateUser;
 
     /**
      * 创建时间
@@ -54,7 +60,7 @@ public class TaskCamiResp extends BaseResp {
      * camiId
      */
     @Schema(description = "camiId")
-    private Integer camiId;
+    private Long camiId;
 
     /**
      * 卡密类型

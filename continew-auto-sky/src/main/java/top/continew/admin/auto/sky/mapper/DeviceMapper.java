@@ -23,6 +23,6 @@ import top.continew.admin.auto.sky.model.entity.DeviceDO;
  * 设备 Mapper
  *
  * @author wjh
- * @since 2025/04/05 19:41
+ * @since 2025/04/12 20:21
  */
 public interface DeviceMapper extends BaseMapper<DeviceDO> {}

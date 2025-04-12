@@ -26,6 +26,6 @@ import top.continew.admin.auto.sky.model.resp.DeviceResp;
  * 设备业务接口
  *
  * @author wjh
- * @since 2025/04/05 19:41
+ * @since 2025/04/12 20:21
  */
 public interface DeviceService extends BaseService<DeviceResp, DeviceDetailResp, DeviceQuery, DeviceReq> {}

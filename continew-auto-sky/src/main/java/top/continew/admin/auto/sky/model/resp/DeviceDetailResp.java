@@ -32,7 +32,7 @@ import java.time.*;
  * 设备详情信息
  *
  * @author wjh
- * @since 2025/04/05 19:41
+ * @since 2025/04/12 20:21
  */
 @Data
 @ExcelIgnoreUnannotated
@@ -41,6 +41,13 @@ public class DeviceDetailResp extends BaseDetailResp {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 设备device
+     */
+    @Schema(description = "设备device")
+    @ExcelProperty(value = "设备device")
+    private String device;
 
     /**
      * 名称

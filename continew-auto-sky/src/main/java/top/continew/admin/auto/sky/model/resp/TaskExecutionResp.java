@@ -29,7 +29,7 @@ import java.time.*;
  * 执行情况信息
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "执行情况信息")
@@ -42,7 +42,7 @@ public class TaskExecutionResp extends BaseResp {
      * 任务Id
      */
     @Schema(description = "任务Id")
-    private Integer taskId;
+    private Long taskId;
 
     /**
      * 开始时间

@@ -31,7 +31,7 @@ import java.time.*;
  * 执行情况查询条件
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "执行情况查询条件")
@@ -45,14 +45,14 @@ public class TaskExecutionQuery implements Serializable {
      */
     @Schema(description = "ID")
     @Query(type = QueryType.EQ)
-    private Integer id;
+    private Long id;
 
     /**
      * 任务Id
      */
     @Schema(description = "任务Id")
     @Query(type = QueryType.EQ)
-    private Integer taskId;
+    private Long taskId;
 
     /**
      * 开始时间

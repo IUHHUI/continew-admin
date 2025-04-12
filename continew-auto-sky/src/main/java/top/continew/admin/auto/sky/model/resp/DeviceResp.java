@@ -29,7 +29,7 @@ import java.time.*;
  * 设备信息
  *
  * @author wjh
- * @since 2025/04/05 19:41
+ * @since 2025/04/12 20:21
  */
 @Data
 @Schema(description = "设备信息")
@@ -37,6 +37,12 @@ public class DeviceResp extends BaseResp {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 设备device
+     */
+    @Schema(description = "设备device")
+    private String device;
 
     /**
      * 名称

@@ -28,7 +28,7 @@ import java.io.Serial;
  * 设备实体
  *
  * @author wjh
- * @since 2025/04/05 19:41
+ * @since 2025/04/12 20:21
  */
 @Data
 @TableName("game_device")
@@ -37,7 +37,11 @@ public class DeviceDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 设备device
+     */
     private String device;
+
     /**
      * 名称
      */

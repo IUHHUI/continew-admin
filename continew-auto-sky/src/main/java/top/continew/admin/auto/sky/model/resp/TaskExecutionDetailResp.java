@@ -32,7 +32,7 @@ import java.time.*;
  * 执行情况详情信息
  *
  * @author wjh
- * @since 2025/03/29 20:49
+ * @since 2025/04/12 20:21
  */
 @Data
 @ExcelIgnoreUnannotated
@@ -54,7 +54,7 @@ public class TaskExecutionDetailResp extends BaseDetailResp {
      */
     @Schema(description = "任务Id")
     @ExcelProperty(value = "任务Id")
-    private Integer taskId;
+    private Long taskId;
 
     /**
      * 开始时间
