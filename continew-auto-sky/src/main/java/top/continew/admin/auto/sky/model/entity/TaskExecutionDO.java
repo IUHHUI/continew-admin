@@ -16,14 +16,11 @@
 
 package top.continew.admin.auto.sky.model.entity;
 
-import lombok.Data;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-
-import top.continew.admin.common.model.entity.BaseDO;
-
+import lombok.Data;
+import top.continew.starter.extension.crud.model.entity.BaseIdDO;
 import java.io.Serial;
-import java.time.*;
+import java.time.LocalDateTime;
 
 /**
  * 执行情况实体
@@ -33,7 +30,7 @@ import java.time.*;
  */
 @Data
 @TableName("game_task_execution")
-public class TaskExecutionDO extends BaseDO {
+public class TaskExecutionDO extends BaseIdDO {
 
     @Serial
     private static final long serialVersionUID = 1L;
