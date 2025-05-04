@@ -16,7 +16,6 @@
 
 package top.continew.admin.auto.sky.model.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -24,12 +23,7 @@ import java.time.LocalDateTime;
  * Game Logging info
  */
 @Data
-public class GameLoggingInfo {
-    /**
-     * 文件类型
-     */
-    private String cami;
-    private String randNum;
+public class GameLoginData {
     /**
      * <pre>
      * { label: 'enable login', value: 1 },
@@ -42,13 +36,7 @@ public class GameLoggingInfo {
     private Integer state;
     private Integer type;
     private String phone;
-    private String password;
-    private String sms;
-    private String qrCode;
     private String email;
     private String device;
     private String subAccount;
-    private LocalDateTime appointmentTime;
-    private Integer remainingDays;
-    private LocalDateTime endTime;
 }

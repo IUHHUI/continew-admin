@@ -23,14 +23,12 @@ package top.continew.admin.auto.sky.model.entity;
  * 2.1 正在登录第一阶段end. state=21,能再提交登录信息
  * 2.2 正在登录, 等待登录结果 state=22, 等待和游戏交互.不能再提交登录信息
  * 2.3 登录失败, 可以再提交登录信息 state=23
- * 2.4 还没开始执行登录, 可以再提交登录信息 state=24
  * 3. 登录成功的, 不能再登录 state=3
  * </pre>
  */
 public enum GameLoginState {
     INIT(1, "还没有提交过登录信息"), LOGGING_1_BEGIN(20, "正在登录第一阶段,打开游戏发送认证吗或者获取二维码."), LOGGING_1_END(21, "正在登录第一阶段END."),
-    LOGGING_2(22, "正在登录, 等待登录结果"), LOGIN_FAIL(23, "登录失败, 可以再提交登录信息"), SUBMIT_LOGIN_INFO(24, "还没开始执行登录, 可以再提交登录信息"),
-    LOGIN_SUCCESS(3, "登录成功的, 不能再登录");
+    LOGGING_2(22, "正在登录, 等待登录结果"), LOGIN_FAIL(23, "登录失败, 可以再提交登录信息"), LOGIN_SUCCESS(3, "登录成功的, 不能再登录");
 
     private final int state;
     private final String desc;

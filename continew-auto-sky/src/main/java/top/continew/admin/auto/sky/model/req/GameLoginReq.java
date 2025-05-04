@@ -65,4 +65,7 @@ public class GameLoginReq implements Serializable {
     private String qrCode;
     @Schema(description = "邮箱")
     private String email;
+    @Schema(description = "subAccount")
+    private String subAccount;
+
 }

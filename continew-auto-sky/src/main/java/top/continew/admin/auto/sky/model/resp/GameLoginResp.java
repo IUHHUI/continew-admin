@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * Game Login Resp.
@@ -46,4 +47,14 @@ public class GameLoginResp implements Serializable {
     private String email;
     @Schema(description = "二维码地址")
     private String qrCode;
+    @Schema(description = "subAccount")
+    private String subAccount;
+    @Schema(description = "预约时间")
+    private LocalDateTime appointmentTime;
+    @Schema(description = "剩余天数")
+    private Integer remainingDays;
+    @Schema(description = "结束时间")
+    private LocalDateTime endTime;
+    @Schema(description = "是否紧急")
+    private Boolean isUrgent;
 }

@@ -46,7 +46,14 @@ public interface TaskService extends BaseService<TaskResp, TaskDetailResp, TaskQ
      *
      * @param req 登录参数
      */
-    void gameLoginSubmit(GameLoginReq req);
+    void gameLoginSubmit1(GameLoginReq req);
+
+    /**
+     * 游戏登录
+     *
+     * @param req 登录参数
+     */
+    void gameLoginSubmit2(GameLoginReq req);
 
     void gameClientLoginCallback(GameClientLoginCallback info);
 }

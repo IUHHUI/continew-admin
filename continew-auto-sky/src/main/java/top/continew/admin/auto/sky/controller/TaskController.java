@@ -52,10 +52,18 @@ public class TaskController extends BaseController<TaskService, TaskResp, TaskDe
     }
 
     @Log(ignore = true)
-    @Operation(summary = "user上号", description = "user上号")
-    @GetMapping("/login/submit")
-    public GameLoginResp gameLoginSubmit(GameLoginReq req) {
-        baseService.gameLoginSubmit(req);
+    @Operation(summary = "user上号1", description = "获取手机验证码/刷新二维码")
+    @PostMapping("/login/submit1")
+    public GameLoginResp gameLoginSubmit1(GameLoginReq req) {
+        baseService.gameLoginSubmit1(req);
+        return baseService.gameLoginState(req);
+    }
+
+    @Log(ignore = true)
+    @Operation(summary = "user上号2", description = "user上号")
+    @PostMapping("/login/submit2")
+    public GameLoginResp gameLoginSubmit2(GameLoginReq req) {
+        baseService.gameLoginSubmit2(req);
         return baseService.gameLoginState(req);
     }
 
