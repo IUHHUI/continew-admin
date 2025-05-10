@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `game_task` (
 	version INT DEFAULT 1 COMMENT '版本号',
     `order_id` VARCHAR(255) NOT NULL COMMENT '网点订单编号',
     channel VARCHAR(50) DEFAULT '' COMMENT '渠道',
-    task_state int DEFAULT 1 COMMENT '任务状态. 1:create; 2:pending; 3:running; 4:success; 5:fail;',
+    task_state int DEFAULT 1 COMMENT '任务状态. 1:create; 2:pending; 3:running; 4:success; 5:fail; 6.过期',
     `need_time` INT DEFAULT 0 COMMENT '需要运行次数',
     ran_time INT DEFAULT 0 COMMENT '已经运行次数',
     task_env_name VARCHAR(255) DEFAULT '' COMMENT '任务环境名称',
