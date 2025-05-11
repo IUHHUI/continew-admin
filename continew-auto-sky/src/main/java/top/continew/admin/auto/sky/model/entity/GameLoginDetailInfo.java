@@ -16,28 +16,22 @@
 
 package top.continew.admin.auto.sky.model.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Game Logging info
+ * Game Logging info, 有pw.
+ *
+ * @author ephui
  */
 @Data
-public class GameLoggingInfo {
+public class GameLoginDetailInfo {
     /**
      * 文件类型
      */
     private String cami;
     private String randNum;
-    /**
-     * <pre>
-     * { label: 'enable login', value: 1 },
-     * { label: 'submit login', value: 2 },
-     * { label: 'running login', value: 3 },
-     * { label: 'had logined', value: 4 },
-     * </pre>
-     */
+
     private Integer channel;
     private Integer state;
     private Integer type;
@@ -51,4 +45,5 @@ public class GameLoggingInfo {
     private LocalDateTime appointmentTime;
     private Integer remainingDays;
     private LocalDateTime endTime;
+    private LocalDateTime updateTime;
 }

@@ -16,6 +16,9 @@
 
 package top.continew.admin.auto.sky.service;
 
+import top.continew.admin.auto.sky.model.entity.DeviceDO;
+import top.continew.admin.auto.sky.model.req.GameDeviceStateReq;
+import top.continew.admin.auto.sky.model.req.GameUpdateStateReq;
 import top.continew.starter.extension.crud.service.BaseService;
 import top.continew.admin.auto.sky.model.query.DeviceQuery;
 import top.continew.admin.auto.sky.model.req.DeviceReq;
@@ -28,4 +31,9 @@ import top.continew.admin.auto.sky.model.resp.DeviceResp;
  * @author wjh
  * @since 2025/04/12 20:21
  */
-public interface DeviceService extends BaseService<DeviceResp, DeviceDetailResp, DeviceQuery, DeviceReq> {}
+public interface DeviceService extends BaseService<DeviceResp, DeviceDetailResp, DeviceQuery, DeviceReq> {
+    /**
+     * 上报设备状态, 更新设备信息
+     */
+    DeviceDO insertOrUpdateDevice(GameDeviceStateReq req);
+}

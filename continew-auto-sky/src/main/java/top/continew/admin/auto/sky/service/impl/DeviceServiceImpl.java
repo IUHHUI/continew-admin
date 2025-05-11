@@ -17,17 +17,20 @@
 package top.continew.admin.auto.sky.service.impl;
 
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import top.continew.starter.extension.crud.service.BaseServiceImpl;
 import top.continew.admin.auto.sky.mapper.DeviceMapper;
 import top.continew.admin.auto.sky.model.entity.DeviceDO;
+import top.continew.admin.auto.sky.model.entity.SkyDict;
 import top.continew.admin.auto.sky.model.query.DeviceQuery;
 import top.continew.admin.auto.sky.model.req.DeviceReq;
+import top.continew.admin.auto.sky.model.req.GameDeviceStateReq;
 import top.continew.admin.auto.sky.model.resp.DeviceDetailResp;
 import top.continew.admin.auto.sky.model.resp.DeviceResp;
 import top.continew.admin.auto.sky.service.DeviceService;
+import top.continew.admin.system.service.UserService;
+import top.continew.starter.extension.crud.service.BaseServiceImpl;
+import java.time.LocalDateTime;
 
 /**
  * 设备业务实现
@@ -37,4 +40,30 @@ import top.continew.admin.auto.sky.service.DeviceService;
  */
 @Service
 @RequiredArgsConstructor
-public class DeviceServiceImpl extends BaseServiceImpl<DeviceMapper, DeviceDO, DeviceResp, DeviceDetailResp, DeviceQuery, DeviceReq> implements DeviceService {}
+public class DeviceServiceImpl extends BaseServiceImpl<DeviceMapper, DeviceDO, DeviceResp, DeviceDetailResp, DeviceQuery, DeviceReq> implements DeviceService {
+    @Autowired
+    private UserService userService;
+
+    private long getAdminId() {
+        //TODO
+        return this.userService.getByUsername("admin").getId();
+    }
+
+    @Override
+    public DeviceDO insertOrUpdateDevice(GameDeviceStateReq req) {
+        DeviceDO deviceDO = baseMapper.lambdaQuery().select().eq(DeviceDO::getDevice, req.getDevice()).one();
+        if (null == deviceDO) {
+            deviceDO = new DeviceDO();
+            deviceDO.setDevice(req.getDevice());
+            var now = LocalDateTime.now();
+            deviceDO.setCreateUser(getAdminId());
+            deviceDO.setCreateTime(now);
+            deviceDO.setState(SkyDict.GAME_DEVICE_STATE_ONLINE);
+        } else {
+            deviceDO.setUpdateTime(LocalDateTime.now());
+            deviceDO.setUpdateUser(deviceDO.getCreateUser());
+        }
+        baseMapper.insertOrUpdate(deviceDO);
+        return deviceDO;
+    }
+}

@@ -61,4 +61,7 @@ public class GameClientLoginCallback implements Serializable {
 
     @Schema(description = "二维码地址")
     private String qrCode;
+
+    @Schema(description = "当前任务信息timestamp")
+    private long timestamp;
 }

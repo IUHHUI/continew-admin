@@ -42,21 +42,19 @@ package top.continew.admin.auto.sky.model.entity;
  * </pre>
  */
 public class SkyDict {
-    public static final int GAME_CHANNEL_OFFICIAL = 1;
-    public static final int GAME_CHANNEL_4399 = 2;
-    public static final int GAME_CHANNEL_BILIBILI = 3;
-    public static final int GAME_CHANNEL_HUAWEI = 4;
-    public static final int GAME_CHANNEL_ALIGAME = 5;
-    public static final int GAME_CHANNEL_OPPO = 6;
-    public static final int GAME_CHANNEL_XIAOMI = 7;
-    public static final int GAME_CHANNEL_VIVO = 8;
+    public static final String KEY_GAME_LOGIN_STANDBY_QUEUE = "sky.login.standby.queue";
+    public static final String KEY_GAME_LOGIN_RUNNING_QUEUE = "sky.login.running.queue";
 
-    public static final int GAME_LOGIN_STATE_INIT = 1;
-    public static final int GAME_LOGIN_STATE_LOGGING_1_BEGIN = 20;
-    public static final int GAME_LOGIN_STATE_LOGGING_1_END = 21;
-    public static final int GAME_LOGIN_STATE_LOGGING_2 = 22;
-    public static final int GAME_LOGIN_STATE_LOGIN_FAIL = 23;
-    public static final int GAME_LOGIN_STATE_LOGIN_SUCCESS = 3;
+    public static final String KEY_GAME_TASK_NORMAL_QUEUE = "sky.task.normal.queue";
+    public static final String KEY_GAME_TASK_URGENT_QUEUE = "sky.task.urgent.queue";
+    public static final int SCORE_NORMAL = 1;
+    public static final int SCORE_URGENT = 2;
+    public static final int SCORE_MAX = 10;
+
+    public static final String GAME_CHANNEL_DICT_CODE = "game_channel";
+
+    public static final int GAME_LOGIN_STEP_1 = 1;
+    public static final int GAME_LOGIN_STEP_2 = 2;
 
     public static final int GAME_LOGIN_TYPE_PHONE_PASSWORD = 1;
     public static final int GAME_LOGIN_TYPE_EMAIL_PASSWORD = 2;
@@ -70,6 +68,7 @@ public class SkyDict {
     public static final int GAME_CAMI_STATE_NOT_USED = 1;
     public static final int GAME_CAMI_STATE_USING = 2;
     public static final int GAME_CAMI_STATE_USED = 3;
+    public static final int GAME_CAMI_STATE_FAIL = 4;
 
     // task_state int DEFAULT 1 COMMENT '任务状态. ; 0:过期; 1:create; 2:pending; 3:running; 4:success; 5:fail';
     public static final int GAME_TASK_STATE_EXPIRED = 0;
@@ -86,9 +85,10 @@ public class SkyDict {
     public static final int GAME_DEVICE_STATE_ONLINE = 1;
     public static final int GAME_DEVICE_STATE_OFFLINE = 0;
 
-    /**
-     * sky game task.
-     */
-    public static final int SKY_TASK_ = 1;
+    // device exec login or sky task state. 1: idle, 2: working, 3: finish, 4: fail.
+    public static final int GAME_DEVICE_EXEC_STATE_IDLE = 1;
+    public static final int GAME_DEVICE_EXEC_STATE_WORKING = 2;
+    public static final int GAME_DEVICE_EXEC_STATE_FINISH = 3;
+    public static final int GAME_DEVICE_EXEC_STATE_FAIL = 4;
 
 }

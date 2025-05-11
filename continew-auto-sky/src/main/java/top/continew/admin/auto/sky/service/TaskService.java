@@ -16,14 +16,16 @@
 
 package top.continew.admin.auto.sky.service;
 
+import top.continew.admin.auto.sky.model.entity.GameChannelDO;
+import top.continew.admin.auto.sky.model.entity.GameLoginDetailInfo;
+import top.continew.admin.auto.sky.model.query.TaskQuery;
 import top.continew.admin.auto.sky.model.req.GameClientLoginCallback;
 import top.continew.admin.auto.sky.model.req.GameLoginReq;
-import top.continew.admin.auto.sky.model.resp.GameLoginResp;
-import top.continew.starter.extension.crud.service.BaseService;
-import top.continew.admin.auto.sky.model.query.TaskQuery;
 import top.continew.admin.auto.sky.model.req.TaskReq;
+import top.continew.admin.auto.sky.model.resp.GameLoginResp;
 import top.continew.admin.auto.sky.model.resp.TaskDetailResp;
 import top.continew.admin.auto.sky.model.resp.TaskResp;
+import top.continew.starter.extension.crud.service.BaseService;
 
 /**
  * 游戏任务业务接口
@@ -32,6 +34,14 @@ import top.continew.admin.auto.sky.model.resp.TaskResp;
  * @since 2025/04/12 20:21
  */
 public interface TaskService extends BaseService<TaskResp, TaskDetailResp, TaskQuery, TaskReq> {
+
+    GameLoginDetailInfo getGameLoginDetailInfo(String cami);
+
+    GameChannelDO getGameChannelByVal(Integer channelVal);
+
+    GameChannelDO getGameChannelByName(String channelName);
+
+    void updateCamiState(String cami, long updateUser, int state, String note);
 
     /**
      * 游戏登录状态
