@@ -77,4 +77,7 @@ public class CamiReq implements Serializable {
     @Schema(description = "手动备注")
     @Length(max = 255, message = "手动备注长度不能超过 {max} 个字符")
     private String notes;
+
+    @Schema(description = "创建任务")
+    private Boolean createTask;
 }
