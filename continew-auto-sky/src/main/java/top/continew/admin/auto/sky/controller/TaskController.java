@@ -18,8 +18,10 @@ package top.continew.admin.auto.sky.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import top.continew.admin.auto.sky.model.query.TaskQuery;
 import top.continew.admin.auto.sky.model.req.GameClientLoginCallback;
@@ -54,7 +56,7 @@ public class TaskController extends BaseController<TaskService, TaskResp, TaskDe
     @Log(ignore = true)
     @Operation(summary = "user上号1", description = "获取手机验证码/刷新二维码")
     @PostMapping("/login/submit1")
-    public GameLoginResp gameLoginSubmit1(GameLoginReq req) {
+    public GameLoginResp gameLoginSubmit1(@Validated @RequestBody GameLoginReq req) {
         baseService.gameLoginSubmit1(req);
         return baseService.gameLoginState(req);
     }
@@ -62,7 +64,7 @@ public class TaskController extends BaseController<TaskService, TaskResp, TaskDe
     @Log(ignore = true)
     @Operation(summary = "user上号2", description = "user上号")
     @PostMapping("/login/submit2")
-    public GameLoginResp gameLoginSubmit2(GameLoginReq req) {
+    public GameLoginResp gameLoginSubmit2(@Validated @RequestBody GameLoginReq req) {
         baseService.gameLoginSubmit2(req);
         return baseService.gameLoginState(req);
     }
@@ -70,7 +72,7 @@ public class TaskController extends BaseController<TaskService, TaskResp, TaskDe
     @Log(ignore = true)
     @Operation(summary = "手机更新上号状态", description = "手机更新上号状态")
     @PostMapping("/client/login/callback")
-    public void clientLoginCallback(GameClientLoginCallback data) {
+    public void clientLoginCallback(@Validated @RequestBody GameClientLoginCallback data) {
         baseService.gameClientLoginCallback(data);
     }
 }

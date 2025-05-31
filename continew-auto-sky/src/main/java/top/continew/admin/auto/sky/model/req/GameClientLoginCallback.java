@@ -34,7 +34,7 @@ public class GameClientLoginCallback implements Serializable {
      */
     @Schema(description = "卡密")
     @NotNull(message = "卡密不能为空")
-    private String cami;
+    private Long taskId;
 
     @Schema(description = "设备device id")
     @NotNull(message = "设备device id不能为空")

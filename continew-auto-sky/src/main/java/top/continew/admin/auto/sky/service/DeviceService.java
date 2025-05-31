@@ -18,7 +18,6 @@ package top.continew.admin.auto.sky.service;
 
 import top.continew.admin.auto.sky.model.entity.DeviceDO;
 import top.continew.admin.auto.sky.model.req.GameDeviceStateReq;
-import top.continew.admin.auto.sky.model.req.GameUpdateStateReq;
 import top.continew.starter.extension.crud.service.BaseService;
 import top.continew.admin.auto.sky.model.query.DeviceQuery;
 import top.continew.admin.auto.sky.model.req.DeviceReq;

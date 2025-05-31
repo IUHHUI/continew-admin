@@ -41,10 +41,12 @@ public class GameDeviceStateReq implements Serializable {
     @Schema(description = "设备状态")
     private int state;
 
+    @Schema(description = "设备当前任务")
+    private Long taskId;
+
+    @Schema(description = "登录1,game业务2")
     private int type;
 
-    @Schema(description = "设备当前任务")
-    private long taskId;
     @Schema(description = "设备当前game业务任务Id")
     private int gameTaskId;
     @Schema(description = "设备当前game业务任务name")

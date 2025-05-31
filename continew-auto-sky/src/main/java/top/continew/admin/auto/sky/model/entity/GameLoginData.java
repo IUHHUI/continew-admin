@@ -39,4 +39,5 @@ public class GameLoginData {
     private String email;
     private String device;
     private String subAccount;
+    private LocalDateTime appointmentTime;
 }

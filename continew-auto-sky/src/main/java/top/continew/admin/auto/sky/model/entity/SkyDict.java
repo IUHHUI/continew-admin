@@ -1,15 +1,31 @@
+/*
+ * Copyright (c) 2022-present Charles7c Authors. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package top.continew.admin.auto.sky.model.entity;
 
 /**
  * <pre>
  * /** @desc game login state
- *  * 1. 还没有提交过登录信息 state=1
- *  * 2.0 正在登录第一阶段,打开游戏发送认证吗或者获取二维码. state=20, 等待和游戏交互.不能再提交登录信息
- *  * 2.1 正在登录第一阶段end. state=21,能再提交登录信息
- *  * 2.2 正在登录, 等待登录结果 state=22, 等待和游戏交互.不能再提交登录信息
- *  * 2.3 登录失败, 可以再提交登录信息 state=23
- *  * 3. 登录成功的, 不能再登录 state=3
- *  *
+ * * 1. 还没有提交过登录信息 state=1
+ * * 2.0 正在登录第一阶段,打开游戏发送认证吗或者获取二维码. state=20, 等待和游戏交互.不能再提交登录信息
+ * * 2.1 正在登录第一阶段end. state=21,能再提交登录信息
+ * * 2.2 正在登录, 等待登录结果 state=22, 等待和游戏交互.不能再提交登录信息
+ * * 2.3 登录失败, 可以再提交登录信息 state=23
+ * * 3. 登录成功的, 不能再登录 state=3
+ * *
  * export const GameLoginState ={
  * STATE_INIT:1,
  * STATE_LOGGING_1_BEGIN:20,

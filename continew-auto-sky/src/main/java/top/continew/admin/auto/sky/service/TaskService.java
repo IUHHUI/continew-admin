@@ -17,6 +17,7 @@
 package top.continew.admin.auto.sky.service;
 
 import top.continew.admin.auto.sky.model.entity.GameChannelDO;
+import top.continew.admin.auto.sky.model.entity.GameLoginData;
 import top.continew.admin.auto.sky.model.entity.GameLoginDetailInfo;
 import top.continew.admin.auto.sky.model.query.TaskQuery;
 import top.continew.admin.auto.sky.model.req.GameClientLoginCallback;
@@ -35,13 +36,13 @@ import top.continew.starter.extension.crud.service.BaseService;
  */
 public interface TaskService extends BaseService<TaskResp, TaskDetailResp, TaskQuery, TaskReq> {
 
-    GameLoginDetailInfo getGameLoginDetailInfo(String cami);
+    GameLoginDetailInfo getGameLoginDetailInfo(Long taskId);
 
     GameChannelDO getGameChannelByVal(Integer channelVal);
 
     GameChannelDO getGameChannelByName(String channelName);
 
-    void updateCamiState(String cami, long updateUser, int state, String note);
+    void updateCamiState(String cami, long updateUser, int state, GameLoginData gameLoginData);
 
     /**
      * 游戏登录状态

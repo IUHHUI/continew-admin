@@ -1,9 +1,26 @@
+/*
+ * Copyright (c) 2022-present Charles7c Authors. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package top.continew.admin.auto.sky.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.continew.admin.auto.sky.model.entity.DeviceDO;
+import top.continew.admin.auto.sky.model.entity.DeviceTaskPair;
 import top.continew.admin.auto.sky.model.entity.GameLoginState;
 import top.continew.admin.auto.sky.model.entity.SkyDict;
 import top.continew.admin.auto.sky.model.req.GameClientLoginCallback;
@@ -53,36 +70,14 @@ public class GameTaskServiceImpl implements GameTaskService {
         return System.currentTimeMillis() / 1000d;
     }
 
-    private CamiDevicePair getCamiDevicePairByCami(String cami) {
-        Collection<CamiDevicePair> list = RedisUtils.zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0,
-            getNewMaxScore());
+    private DeviceTaskPair getCamiDevicePairByDevice(final String device) {
+        Collection<DeviceTaskPair> list = RedisUtils
+            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0, getNewMaxScore());
         if (list.isEmpty()) {
             return null;
         }
-        return list.stream().filter(pair -> pair.cami.equals(cami)).findFirst().orElse(null);
+        return list.stream().filter(pair -> pair.device().equals(device)).findFirst().orElse(null);
     }
-
-    private CamiDevicePair getCamiDevicePairByDevice(String device) {
-        Collection<CamiDevicePair> list = RedisUtils.zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0,
-            getNewMaxScore());
-        if (list.isEmpty()) {
-            return null;
-        }
-        return list.stream().filter(pair -> pair.device.equals(device)).findFirst().orElse(null);
-    }
-
-    private boolean camiOnGameLoginTask(String cami) {
-        if (RedisUtils.zScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, cami) == null) {
-            return false;
-        }
-        return getCamiDevicePairByCami(cami) != null;
-    }
-
-    private boolean deviceOnGameLoginTask(String device) {
-        return getCamiDevicePairByDevice(device) != null;
-    }
-
-    private record CamiDevicePair(String cami, String device) {}
 
     /**
      * 加锁, 避免多个设备被分配了相同cami的登录任务.
@@ -92,29 +87,30 @@ public class GameTaskServiceImpl implements GameTaskService {
      */
     private synchronized GameTaskResp dispatchNewGameLoginTask(DeviceDO deviceDO) {
         //dispatch new work.
-        Collection<String> camiList = RedisUtils.zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0,
-            getNewMaxScore(), 0, 1);
-        if (camiList.isEmpty()) {
+        Collection<String> taskIds = RedisUtils
+            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0, getNewMaxScore(), 0, 1);
+        if (taskIds.isEmpty()) {
             GameTaskResp gtr = new GameTaskResp();
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
             return gtr;
         }
         //有任务
-        var cami = camiList.iterator().next();
-        var camiDevicePair = new CamiDevicePair(cami, deviceDO.getDevice());
+        var taskId = Long.parseLong(taskIds.iterator().next());
+        var pair = new DeviceTaskPair(deviceDO.getDevice(), taskId);
         //添加到运行队列
-        if (RedisUtils.zAdd(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, camiDevicePair, getNowScore())) {
-            RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, cami);
-            var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(cami);
+        if (RedisUtils.zAdd(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, pair, getNowScore())) {
+            RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId);
+            var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(taskId);
             gameLoginDetailInfo.setDevice(deviceDO.getDevice());
         }
-        return buildGameLoginTaskByCami(cami);
+        return buildGameLoginTaskByPair(pair);
     }
 
-    private GameTaskResp buildGameLoginTaskByCami(String cami) {
+    private GameTaskResp buildGameLoginTaskByPair(DeviceTaskPair pair) {
         GameTaskResp gtr = new GameTaskResp();
+        gtr.setTaskId(pair.taskId());
         gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
-        var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(cami);
+        var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(pair.taskId());
         gtr.setGameLoginAccount(gameLoginDetailInfo.getPhone());
         gtr.setGameLoginPassword(gameLoginDetailInfo.getPassword());
         gtr.setGameLoginEmail(gameLoginDetailInfo.getEmail());
@@ -125,12 +121,14 @@ public class GameTaskServiceImpl implements GameTaskService {
 
         gtr.setGameLoginType(gameLoginDetailInfo.getType());
         gtr.setTimestamp(gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli());
-        if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_PASSWORD || gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_EMAIL_PASSWORD) {
+        if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_PASSWORD || gameLoginDetailInfo
+            .getType() == SkyDict.GAME_LOGIN_TYPE_EMAIL_PASSWORD) {
             //密码登录, 直接第二步骤.
             gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_2);
         } else {
             if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_SMS) {
-                if (gameLoginDetailInfo.getState() == GameLoginState.LOGGING_1_END.getState() || gameLoginDetailInfo.getState() == GameLoginState.LOGGING_2.getState()) {
+                if (gameLoginDetailInfo.getState() == GameLoginState.LOGGING_1_END.getState() || gameLoginDetailInfo
+                    .getState() == GameLoginState.LOGGING_2.getState()) {
                     gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_2);
                 } else {
                     gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_1);
@@ -143,7 +141,7 @@ public class GameTaskServiceImpl implements GameTaskService {
         return gtr;
     }
 
-    private void gameClientLoginCallback(GameDeviceStateReq req, CamiDevicePair camiDevicePair) {
+    private void gameClientLoginCallback(GameDeviceStateReq req, DeviceTaskPair deviceTaskPair) {
         GameClientLoginCallback c = new GameClientLoginCallback();
         if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_WORKING) {
             if (req.getGameLoginStep() == SkyDict.GAME_LOGIN_STEP_1) {
@@ -163,8 +161,8 @@ public class GameTaskServiceImpl implements GameTaskService {
             return;
         }
 
-        c.setDevice(camiDevicePair.device());
-        c.setCami(camiDevicePair.cami());
+        c.setDevice(deviceTaskPair.device());
+        c.setTaskId(deviceTaskPair.taskId());
         c.setPhone(req.getGameLoginAccount());
         c.setChannel(req.getGameLoginChannel());
         c.setTimestamp(req.getTimestamp());
@@ -172,7 +170,7 @@ public class GameTaskServiceImpl implements GameTaskService {
 
         if (c.getState() == GameLoginState.LOGIN_SUCCESS.getState()) {
             //成功的任务移除.
-            RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, camiDevicePair.cami());
+            RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, deviceTaskPair);
         }
     }
 
@@ -185,22 +183,22 @@ public class GameTaskServiceImpl implements GameTaskService {
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
             return gtr;
         } else if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_FAIL) {
-            var camiDevicePair = getCamiDevicePairByCami(req.getDevice());
+            var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
             if (camiDevicePair == null) {
                 log.warn("camiDevicePair is null. 下发新任务给设备. req {}", req);
                 // dispatch new task.
                 return dispatchNewGameLoginTask(deviceDO);
             }
             gameClientLoginCallback(req, camiDevicePair);
-            var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(camiDevicePair.cami());
+            var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(camiDevicePair.taskId());
             if (gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli() == req.getTimestamp()) {
-                //longin消息没有更新, 返回空任务信息.
+                //login消息没有更新, 返回空任务信息.
                 GameTaskResp gtr = new GameTaskResp();
                 gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
                 return gtr;
             }
             //登录消息更新了, 构建新的任务信息.
-            return buildGameLoginTaskByCami(camiDevicePair.cami());
+            return buildGameLoginTaskByPair(camiDevicePair);
         } else if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_FINISH) {
             var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
             if (camiDevicePair == null) {
@@ -215,7 +213,7 @@ public class GameTaskServiceImpl implements GameTaskService {
                 //login success
                 return dispatchNewGameLoginTask(deviceDO);
             } else {
-                return buildGameLoginTaskByCami(camiDevicePair.cami());
+                return buildGameLoginTaskByPair(camiDevicePair);
             }
         } else {
             log.error("未知状态:{}, req {}", req.getState(), req);

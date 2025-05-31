@@ -16,34 +16,4 @@
 
 package top.continew.admin.auto.sky.model.entity;
 
-import lombok.Data;
-import java.time.LocalDateTime;
-
-/**
- * Game Logging info, 有pw.
- *
- * @author ephui
- */
-@Data
-public class GameLoginDetailInfo {
-    /**
-     * 文件类型
-     */
-    private String cami;
-    private String randNum;
-
-    private Integer channel;
-    private Integer state;
-    private Integer type;
-    private String phone;
-    private String password;
-    private String sms;
-    private String qrCode;
-    private String email;
-    private String device;
-    private String subAccount;
-    private LocalDateTime appointmentDateTime;
-    private Integer remainingDays;
-    private LocalDateTime endTime;
-    private LocalDateTime updateTime;
-}
+public record DeviceTaskPair(String device, Long taskId) {}

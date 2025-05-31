@@ -34,6 +34,9 @@ public class GameLoginResp implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "任务id")
+    private Long taskId;
+
     /**
      * {@link top.continew.admin.auto.sky.model.entity.GameLoginState}
      */
@@ -50,7 +53,7 @@ public class GameLoginResp implements Serializable {
     @Schema(description = "subAccount")
     private String subAccount;
     @Schema(description = "预约时间")
-    private LocalDateTime appointmentTime;
+    private LocalDateTime appointmentDateTime;
     @Schema(description = "剩余天数")
     private Integer remainingDays;
     @Schema(description = "结束时间")
