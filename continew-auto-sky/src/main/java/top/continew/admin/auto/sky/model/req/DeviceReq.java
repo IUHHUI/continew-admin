@@ -42,13 +42,6 @@ public class DeviceReq implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 设备ID
-     */
-    @Schema(description = "设备ID")
-    @NotNull(message = "设备ID不能为空")
-    private Long id;
-
-    /**
      * 设备device
      */
     @Schema(description = "设备device")
@@ -74,7 +67,6 @@ public class DeviceReq implements Serializable {
      * 设备IP
      */
     @Schema(description = "设备IP")
-    @NotBlank(message = "设备IP不能为空")
     @Length(max = 255, message = "设备IP长度不能超过 {max} 个字符")
     private String ip;
 
