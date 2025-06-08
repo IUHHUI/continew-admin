@@ -55,6 +55,7 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceMapper, DeviceDO, D
         if (null == deviceDO) {
             deviceDO = new DeviceDO();
             deviceDO.setDevice(req.getDevice());
+            deviceDO.setName(req.getDevice());
             var now = LocalDateTime.now();
             deviceDO.setCreateUser(getAdminId());
             deviceDO.setCreateTime(now);
