@@ -75,6 +75,9 @@ public class SaTokenConfiguration {
                 if (saRequest.getRequestPath().startsWith("/sky/task/login/")) {
                     return;
                 }
+                if (saRequest.getRequestPath().startsWith("/sky/worker/")) {
+                    return;
+                }
 
                 List<String> paramNames = saRequest.getParamNames();
                 if (paramNames.stream().anyMatch(SaSignTemplate.sign::equals)) {
