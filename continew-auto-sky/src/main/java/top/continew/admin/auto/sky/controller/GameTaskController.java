@@ -21,7 +21,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.continew.admin.auto.sky.model.req.GameDeviceStateReq;
@@ -47,8 +48,8 @@ public class GameTaskController {
 
     @Log(ignore = true)
     @Operation(summary = "上报状态", description = "客户端上报状态,领取任务.")
-    @GetMapping("/state")
-    public GameTaskResp reportAndReceiveGameTask(GameDeviceStateReq req) {
+    @PostMapping("/state")
+    public GameTaskResp reportAndReceiveGameTask(@RequestBody GameDeviceStateReq req) {
         return gameTaskService.reportAndReceiveGameTask(req);
     }
 }
