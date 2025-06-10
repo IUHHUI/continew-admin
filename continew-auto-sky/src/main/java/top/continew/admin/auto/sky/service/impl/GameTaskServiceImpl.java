@@ -46,6 +46,7 @@ public class GameTaskServiceImpl implements GameTaskService {
     @Override
     public GameTaskResp reportAndReceiveGameTask(GameDeviceStateReq req) {
         DeviceDO deviceDO = deviceService.insertOrUpdateDevice(req);
+        log.info("设备上报: {}", deviceDO);
         CheckUtils.throwIfNull(deviceDO, "设备更新失败");
 
         if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_WORKING) {
