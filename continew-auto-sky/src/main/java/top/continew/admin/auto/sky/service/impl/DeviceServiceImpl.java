@@ -60,6 +60,7 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceMapper, DeviceDO, D
             deviceDO.setCreateUser(getAdminId());
             deviceDO.setCreateTime(now);
             deviceDO.setState(SkyDict.GAME_DEVICE_STATE_ONLINE);
+            deviceDO.setType(SkyDict.GAME_DEVICE_TYPE_BUSINESS);
         } else {
             deviceDO.setUpdateTime(LocalDateTime.now());
             deviceDO.setUpdateUser(deviceDO.getCreateUser());
