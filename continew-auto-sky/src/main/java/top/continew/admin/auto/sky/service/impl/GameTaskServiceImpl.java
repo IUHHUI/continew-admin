@@ -88,15 +88,16 @@ public class GameTaskServiceImpl implements GameTaskService {
      */
     private synchronized GameTaskResp dispatchNewGameLoginTask(DeviceDO deviceDO) {
         //dispatch new work.
-        Collection<String> taskIds = RedisUtils
+        Collection<Long> taskIds = RedisUtils
             .zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0, getNewMaxScore(), 0, 1);
         if (taskIds.isEmpty()) {
             GameTaskResp gtr = new GameTaskResp();
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
             return gtr;
         }
+        log.info("分配任务: {}", taskIds);
         //有任务
-        var taskId = Long.parseLong(taskIds.iterator().next());
+        var taskId = taskIds.iterator().next();
         var pair = new DeviceTaskPair(deviceDO.getDevice(), taskId);
         //添加到运行队列
         if (RedisUtils.zAdd(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, pair, getNowScore())) {
