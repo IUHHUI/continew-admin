@@ -72,8 +72,8 @@ public class GameTaskServiceImpl implements GameTaskService {
     }
 
     private DeviceTaskPair getCamiDevicePairByDevice(final String device) {
-        Collection<DeviceTaskPair> list = RedisUtils
-            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0, getNewMaxScore());
+        Collection<DeviceTaskPair> list = RedisUtils.zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0,
+            getNewMaxScore());
         if (list.isEmpty()) {
             return null;
         }
@@ -88,8 +88,8 @@ public class GameTaskServiceImpl implements GameTaskService {
      */
     private synchronized GameTaskResp dispatchNewGameLoginTask(DeviceDO deviceDO) {
         //dispatch new work.
-        Collection<Long> taskIds = RedisUtils
-            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0, getNewMaxScore(), 0, 1);
+        Collection<Long> taskIds = RedisUtils.zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0, getNewMaxScore()
+            , 0, 1);
         if (taskIds.isEmpty()) {
             GameTaskResp gtr = new GameTaskResp();
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
@@ -98,11 +98,18 @@ public class GameTaskServiceImpl implements GameTaskService {
         log.info("分配任务: {}", taskIds);
         //有任务
         var taskId = taskIds.iterator().next();
+        var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(taskId);
+        if (gameLoginDetailInfo == null) {
+            //expire task.
+            RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId);
+            GameTaskResp gtr = new GameTaskResp();
+            gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
+            return gtr;
+        }
         var pair = new DeviceTaskPair(deviceDO.getDevice(), taskId);
         //添加到运行队列
         if (RedisUtils.zAdd(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, pair, getNowScore())) {
             RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId);
-            var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(taskId);
             gameLoginDetailInfo.setDevice(deviceDO.getDevice());
         }
         return buildGameLoginTaskByPair(pair);
@@ -123,14 +130,12 @@ public class GameTaskServiceImpl implements GameTaskService {
 
         gtr.setGameLoginType(gameLoginDetailInfo.getType());
         gtr.setTimestamp(gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli());
-        if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_PASSWORD || gameLoginDetailInfo
-            .getType() == SkyDict.GAME_LOGIN_TYPE_EMAIL_PASSWORD) {
+        if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_PASSWORD || gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_EMAIL_PASSWORD) {
             //密码登录, 直接第二步骤.
             gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_2);
         } else {
             if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_SMS) {
-                if (gameLoginDetailInfo.getState() == GameLoginState.LOGGING_1_END.getState() || gameLoginDetailInfo
-                    .getState() == GameLoginState.LOGGING_2.getState()) {
+                if (gameLoginDetailInfo.getState() == GameLoginState.LOGGING_1_END.getState() || gameLoginDetailInfo.getState() == GameLoginState.LOGGING_2.getState()) {
                     gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_2);
                 } else {
                     gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_1);
