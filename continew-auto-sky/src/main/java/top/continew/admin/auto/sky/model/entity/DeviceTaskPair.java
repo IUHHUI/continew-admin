@@ -16,4 +16,27 @@
 
 package top.continew.admin.auto.sky.model.entity;
 
-public record DeviceTaskPair(String device, Long taskId) {}
+import lombok.Data;
+
+@Data
+public class DeviceTaskPair {
+    private String device;
+    private Long taskId;
+
+    public DeviceTaskPair() {
+
+    }
+
+    public DeviceTaskPair(String device, Long taskId) {
+        this.device = device;
+        this.taskId = taskId;
+    }
+
+    public String device() {
+        return device;
+    }
+
+    public Long taskId() {
+        return taskId;
+    }
+}
