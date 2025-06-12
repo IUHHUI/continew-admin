@@ -265,6 +265,7 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
         CheckUtils.throwIf(!taskCamiDO.getIsSelfCami(), "续单卡密不能登录");
 
         var gameLogging = gameLoginDetailInfoCache.getIfPresent(taskCamiDO.getTaskId());
+        log.debug("游戏登录task: {}", gameLogging);
         if (gameLogging != null) {
             CheckUtils.throwIf(Objects.equals(gameLogging.getState(), GameLoginState.LOGIN_SUCCESS
                 .getState()), "已经登录成功");
