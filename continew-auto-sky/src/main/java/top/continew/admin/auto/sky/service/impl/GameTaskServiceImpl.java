@@ -32,6 +32,7 @@ import top.continew.admin.auto.sky.service.TaskService;
 import top.continew.starter.cache.redisson.util.RedisUtils;
 import top.continew.starter.core.validation.CheckUtils;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Collection;
 
 @Slf4j
@@ -43,13 +44,22 @@ public class GameTaskServiceImpl implements GameTaskService {
     @Autowired
     private TaskService taskService;
 
+    private boolean isStateWorking(final int state) {
+        return state == GameLoginState.LOGGING_1_BEGIN.getState() || state == GameLoginState.LOGGING_2.getState();
+    }
+
+    private boolean validState(final int state) {
+        return Arrays.stream(GameLoginState.values()).anyMatch(e -> e.getState() == state);
+    }
+
     @Override
     public GameTaskResp reportAndReceiveGameTask(GameDeviceStateReq req) {
         DeviceDO deviceDO = deviceService.insertOrUpdateDevice(req);
         log.info("设备上报: {}", deviceDO);
         CheckUtils.throwIfNull(deviceDO, "设备更新失败");
+        CheckUtils.throwIf(!validState(req.getState()), "上报状态错误.");
 
-        if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_WORKING) {
+        if (isStateWorking(req.getState())) {
             //waiting next report.
             GameTaskResp r = new GameTaskResp();
             r.setType(deviceDO.getType());
@@ -72,8 +82,8 @@ public class GameTaskServiceImpl implements GameTaskService {
     }
 
     private DeviceTaskPair getCamiDevicePairByDevice(final String device) {
-        Collection<DeviceTaskPair> list = RedisUtils.zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0,
-            getNewMaxScore());
+        Collection<DeviceTaskPair> list = RedisUtils
+            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0, getNewMaxScore());
         if (list.isEmpty()) {
             return null;
         }
@@ -88,8 +98,8 @@ public class GameTaskServiceImpl implements GameTaskService {
      */
     private synchronized GameTaskResp dispatchNewGameLoginTask(DeviceDO deviceDO) {
         //dispatch new work.
-        Collection<Long> taskIds = RedisUtils.zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0, getNewMaxScore()
-            , 0, 1);
+        Collection<Long> taskIds = RedisUtils
+            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0, getNewMaxScore(), 0, 1);
         if (taskIds.isEmpty()) {
             GameTaskResp gtr = new GameTaskResp();
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
@@ -130,12 +140,14 @@ public class GameTaskServiceImpl implements GameTaskService {
 
         gtr.setGameLoginType(gameLoginDetailInfo.getType());
         gtr.setTimestamp(gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli());
-        if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_PASSWORD || gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_EMAIL_PASSWORD) {
+        if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_PASSWORD || gameLoginDetailInfo
+            .getType() == SkyDict.GAME_LOGIN_TYPE_EMAIL_PASSWORD) {
             //密码登录, 直接第二步骤.
             gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_2);
         } else {
             if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_SMS) {
-                if (gameLoginDetailInfo.getState() == GameLoginState.LOGGING_1_END.getState() || gameLoginDetailInfo.getState() == GameLoginState.LOGGING_2.getState()) {
+                if (gameLoginDetailInfo.getState() == GameLoginState.LOGGING_1_END.getState() || gameLoginDetailInfo
+                    .getState() == GameLoginState.LOGGING_2.getState()) {
                     gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_2);
                 } else {
                     gtr.setGameLoginStep(SkyDict.GAME_LOGIN_STEP_1);
@@ -150,24 +162,7 @@ public class GameTaskServiceImpl implements GameTaskService {
 
     private void gameClientLoginCallback(GameDeviceStateReq req, DeviceTaskPair deviceTaskPair) {
         GameClientLoginCallback c = new GameClientLoginCallback();
-        if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_WORKING) {
-            if (req.getGameLoginStep() == SkyDict.GAME_LOGIN_STEP_1) {
-                c.setState(GameLoginState.LOGGING_1_BEGIN.getState());
-            } else {
-                c.setState(GameLoginState.LOGGING_2.getState());
-            }
-        } else if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_FINISH) {
-            if (req.getGameLoginStep() == SkyDict.GAME_LOGIN_STEP_1) {
-                c.setState(GameLoginState.LOGGING_1_END.getState());
-            } else {
-                c.setState(GameLoginState.LOGIN_SUCCESS.getState());
-            }
-        } else if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_FAIL) {
-            c.setState(GameLoginState.LOGIN_FAIL.getState());
-        } else {
-            return;
-        }
-
+        c.setState(req.getState());
         c.setDevice(deviceTaskPair.device());
         c.setTaskId(deviceTaskPair.taskId());
         c.setPhone(req.getGameLoginAccount());
@@ -182,14 +177,14 @@ public class GameTaskServiceImpl implements GameTaskService {
     }
 
     private GameTaskResp dispatchGameLoginTask(DeviceDO deviceDO, GameDeviceStateReq req) {
-        if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_IDLE) {
+        if (req.getState() == GameLoginState.INIT.getState()) {
             return dispatchNewGameLoginTask(deviceDO);
-        } else if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_WORKING) {
+        } else if (isStateWorking(req.getState())) {
             //wait next report. 返回空任务信息.
             GameTaskResp gtr = new GameTaskResp();
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
             return gtr;
-        } else if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_FAIL) {
+        } else if (req.getState() == GameLoginState.LOGIN_FAIL.getState()) {
             var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
             if (camiDevicePair == null) {
                 log.warn("camiDevicePair is null. 下发新任务给设备. req {}", req);
@@ -206,7 +201,7 @@ public class GameTaskServiceImpl implements GameTaskService {
             }
             //登录消息更新了, 构建新的任务信息.
             return buildGameLoginTaskByPair(camiDevicePair);
-        } else if (req.getState() == SkyDict.GAME_DEVICE_EXEC_STATE_FINISH) {
+        } else if (req.getState() == GameLoginState.LOGIN_SUCCESS.getState()) {
             var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
             if (camiDevicePair == null) {
                 log.error("内部错误. camiDevicePair is null. req {}", req);

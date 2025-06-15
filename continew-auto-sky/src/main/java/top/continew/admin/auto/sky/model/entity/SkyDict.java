@@ -101,10 +101,4 @@ public class SkyDict {
     public static final int GAME_DEVICE_STATE_ONLINE = 1;
     public static final int GAME_DEVICE_STATE_OFFLINE = 0;
 
-    // device exec login or sky task state. 1: idle, 2: working, 3: finish, 4: fail.
-    public static final int GAME_DEVICE_EXEC_STATE_IDLE = 1;
-    public static final int GAME_DEVICE_EXEC_STATE_WORKING = 2;
-    public static final int GAME_DEVICE_EXEC_STATE_FINISH = 3;
-    public static final int GAME_DEVICE_EXEC_STATE_FAIL = 4;
-
 }
