@@ -201,6 +201,16 @@ public class GameTaskServiceImpl implements GameTaskService {
             }
             //登录消息更新了, 构建新的任务信息.
             return buildGameLoginTaskByPair(camiDevicePair);
+        } else if (req.getState() == GameLoginState.LOGGING_1_END.getState()) {
+            var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
+            if (camiDevicePair == null) {
+                log.error("内部错误. camiDevicePair is null. req {}", req);
+                // dispatch new task.
+                return dispatchNewGameLoginTask(deviceDO);
+            }
+
+            gameClientLoginCallback(req, camiDevicePair);
+            return buildGameLoginTaskByPair(camiDevicePair);
         } else if (req.getState() == GameLoginState.LOGIN_SUCCESS.getState()) {
             var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
             if (camiDevicePair == null) {
@@ -210,13 +220,7 @@ public class GameTaskServiceImpl implements GameTaskService {
             }
 
             gameClientLoginCallback(req, camiDevicePair);
-
-            if (req.getGameLoginStep() == SkyDict.GAME_LOGIN_STEP_2) {
-                //login success
-                return dispatchNewGameLoginTask(deviceDO);
-            } else {
-                return buildGameLoginTaskByPair(camiDevicePair);
-            }
+            return dispatchNewGameLoginTask(deviceDO);
         } else {
             log.error("未知状态:{}, req {}", req.getState(), req);
             //wait next report. 返回空任务信息.
