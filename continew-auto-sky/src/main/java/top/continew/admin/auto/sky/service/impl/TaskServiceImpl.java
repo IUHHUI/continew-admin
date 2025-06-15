@@ -280,10 +280,7 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
         log.info("更新游戏登录状态:{}", info);
 
         //verify device.
-        var device = deviceMapper.lambdaQuery()
-            .select(DeviceDO::getId, DeviceDO::getDevice, DeviceDO::getState)
-            .eq(DeviceDO::getDevice, info.getDevice())
-            .one();
+        var device = deviceMapper.lambdaQuery().select().eq(DeviceDO::getDevice, info.getDevice()).one();
         CheckUtils.throwIfNull(device, "设备不存在");
 
         var gameLogging = gameLoginDetailInfoCache.getIfPresent(info.getTaskId());
