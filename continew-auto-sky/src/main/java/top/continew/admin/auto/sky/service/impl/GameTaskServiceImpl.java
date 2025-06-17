@@ -55,9 +55,19 @@ public class GameTaskServiceImpl implements GameTaskService {
     @Override
     public GameTaskResp reportAndReceiveGameTask(GameDeviceStateReq req) {
         DeviceDO deviceDO = deviceService.insertOrUpdateDevice(req);
-        log.info("设备上报: {}", deviceDO);
+        log.debug("设备: {} state {}", deviceDO, req);
         CheckUtils.throwIfNull(deviceDO, "设备更新失败");
         CheckUtils.throwIf(!validState(req.getState()), "上报状态错误.");
+
+        //clean expire task byte deviceUUID. taskId maybe 0 which is init value.
+        var devicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
+        if (devicePair != null) {
+            var info = taskService.getGameLoginDetailInfo(devicePair.getTaskId());
+            if (info == null) {
+                // 任务过期, 清理掉.
+                RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, devicePair);
+            }
+        }
 
         if (isStateWorking(req.getState())) {
             //waiting next report.
@@ -185,6 +195,7 @@ public class GameTaskServiceImpl implements GameTaskService {
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
             return gtr;
         } else if (req.getState() == GameLoginState.LOGIN_FAIL.getState()) {
+            //可能由于网络多次上报.
             var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
             if (camiDevicePair == null) {
                 log.warn("camiDevicePair is null. 下发新任务给设备. req {}", req);
