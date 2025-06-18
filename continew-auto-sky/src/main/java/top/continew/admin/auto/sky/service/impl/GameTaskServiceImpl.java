@@ -16,6 +16,7 @@
 
 package top.continew.admin.auto.sky.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,7 +56,7 @@ public class GameTaskServiceImpl implements GameTaskService {
     @Override
     public GameTaskResp reportAndReceiveGameTask(GameDeviceStateReq req) {
         DeviceDO deviceDO = deviceService.insertOrUpdateDevice(req);
-        log.debug("设备: {} state {}", deviceDO, req);
+        log.debug("设备: {} state {}", JSONUtil.toJsonStr(deviceDO), req);
         CheckUtils.throwIfNull(deviceDO, "设备更新失败");
         CheckUtils.throwIf(!validState(req.getState()), "上报状态错误.");
 
@@ -64,6 +65,7 @@ public class GameTaskServiceImpl implements GameTaskService {
         if (devicePair != null) {
             var info = taskService.getGameLoginDetailInfo(devicePair.getTaskId());
             if (info == null) {
+                log.debug("设备: {} devicePari {} had expire.", req.getDevice(), devicePair);
                 // 任务过期, 清理掉.
                 RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, devicePair);
             }
