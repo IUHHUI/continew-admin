@@ -19,6 +19,7 @@ package top.continew.admin.auto.sky.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,6 +37,7 @@ import top.continew.starter.log.annotation.Log;
  * @author wjh
  * @since 2025/05/12 20:21
  */
+@Slf4j
 @Tag(name = "游戏任务执行 API")
 @Log(module = "登录")
 @Validated
@@ -50,6 +52,8 @@ public class GameTaskController {
     @Operation(summary = "上报状态", description = "客户端上报状态,领取任务.")
     @PostMapping("/state")
     public GameTaskResp reportAndReceiveGameTask(@RequestBody GameDeviceStateReq req) {
-        return gameTaskService.reportAndReceiveGameTask(req);
+        var result = gameTaskService.reportAndReceiveGameTask(req);
+        log.debug("上报状态: {} return {}", req, result);
+        return result;
     }
 }

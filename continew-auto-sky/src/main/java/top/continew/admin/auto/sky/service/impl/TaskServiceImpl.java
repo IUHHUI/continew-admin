@@ -77,6 +77,9 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
 
     @Override
     public GameLoginDetailInfo getGameLoginDetailInfo(Long taskId) {
+        if (log.isDebugEnabled()) {
+            log.debug("all is :{}", gameLoginDetailInfoCache.asMap().entrySet());
+        }
         return gameLoginDetailInfoCache.getIfPresent(taskId);
     }
 

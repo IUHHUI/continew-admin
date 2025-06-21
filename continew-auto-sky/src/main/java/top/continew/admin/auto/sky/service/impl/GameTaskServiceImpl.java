@@ -244,8 +244,10 @@ public class GameTaskServiceImpl implements GameTaskService {
     }
 
     private GameTaskResp dispatchGameBusinessTask(DeviceDO deviceDO, GameDeviceStateReq req) {
-        //TODO
-        return null;
+        //TODO 临时返回空任务.
+        GameTaskResp r = new GameTaskResp();
+        r.setType(deviceDO.getType());
+        return r;
     }
 
     @Override
