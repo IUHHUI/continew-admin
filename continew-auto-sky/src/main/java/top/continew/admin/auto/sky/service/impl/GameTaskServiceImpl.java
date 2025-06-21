@@ -174,11 +174,13 @@ public class GameTaskServiceImpl implements GameTaskService {
 
     private void gameClientLoginCallback(GameDeviceStateReq req, DeviceTaskPair deviceTaskPair) {
         GameClientLoginCallback c = new GameClientLoginCallback();
-        c.setState(req.getState());
-        c.setDevice(deviceTaskPair.device());
         c.setTaskId(deviceTaskPair.taskId());
-        c.setPhone(req.getGameLoginAccount());
+        c.setDevice(deviceTaskPair.device());
         c.setChannel(req.getGameLoginChannel());
+        c.setType(req.getGameLoginType());
+        c.setPhone(req.getGameLoginAccount());
+        c.setState(req.getState());
+        c.setQrCode(req.getGameLoginQrcode());
         c.setTimestamp(req.getTimestamp());
         taskService.gameClientLoginCallback(c);
 

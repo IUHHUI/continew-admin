@@ -41,11 +41,11 @@ public class GameClientLoginCallback implements Serializable {
     private String device;
 
     @Schema(description = "游戏渠道")
-    @NotNull(message = "手机号不能为空")
+    @NotNull(message = "游戏渠道不能为空")
     private Integer channel;
 
     @Schema(description = "登录类型:1手机密码,2邮箱密码,3手机验证码,4二维码")
-    @NotNull(message = "手机号不能为空")
+    @NotNull(message = "登录类型不能为空")
     private Integer type;
 
     @Schema(description = "手机号")

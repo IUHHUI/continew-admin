@@ -306,7 +306,6 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
                 gameLogging.setType(GameLoginType.QR_CODE.getType());
                 gameLogging.setQrCode(info.getQrCode());
             } else {
-                gameLogging.setType(info.getType());
                 gameLogging.setQrCode("");
             }
             gameLogging.setSms("");
