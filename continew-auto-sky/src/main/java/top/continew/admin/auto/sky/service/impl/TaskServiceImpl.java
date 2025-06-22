@@ -287,19 +287,24 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
         CheckUtils.throwIfNull(device, "设备不存在");
 
         var gameLogging = gameLoginDetailInfoCache.getIfPresent(info.getTaskId());
-        CheckUtils.throwIfNull(gameLogging, "游戏登录状态不存在");
-        CheckUtils.throwIf(!Objects.equals(gameLogging.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli(), info
-            .getTimestamp()), "登录信息不匹配");
+        if (gameLogging == null) {
+            log.error("游戏登录状态不存在. taskId: {}", info.getTaskId());
+            return;
+        }
+        if (info.getTimestamp() != gameLogging.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli()) {
+            // gameLogging expire, 然后用户重新提交信息.
+            // 时间对不上是可能的, 这时候,应该让云手机重置状态.
+            log.error("登录信息timestamp 不相等. callback {}, gameLoginInfo {}", info, gameLogging);
+            return;
+        }
         var camiDO = camiMapper.lambdaQuery()
             .select(CamiDO::getId, CamiDO::getCami, CamiDO::getState, CamiDO::getIsUrgent, CamiDO::getCreateTime, CamiDO::getCreateUser)
             .eq(CamiDO::getCami, gameLogging.getCami())
             .one();
-        CheckUtils.throwIfNull(camiDO, "卡密不存在");
-        if (info.getTimestamp() != gameLogging.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli()) {
-            log.error("登录信息timestamp 不相等. callback {}, gameLoginInfo {}", info, gameLogging);
+        if (camiDO == null) {
+            log.error("卡密不存在. callback {}", info);
             return;
         }
-
         //GameLoginState.LOGGING_1_END, GameLoginState.LOGIN_FAIL, GameLoginState.LOGIN_SUCCESS
         if (Objects.equals(info.getState(), GameLoginState.LOGGING_1_END.getState())) {
             if (StringUtils.isNotBlank(info.getQrCode())) {
