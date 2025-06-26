@@ -76,5 +76,5 @@ public class GameDeviceStateReq implements Serializable {
     private int gameLoginChannel;
 
     @Schema(description = "设备当前任务信息change timestamp")
-    private long changeTimestamp;
+    private long timestamp;
 }

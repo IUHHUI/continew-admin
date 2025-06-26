@@ -151,7 +151,7 @@ public class GameTaskServiceImpl implements GameTaskService {
         gtr.setGameLoginChannel(gameLoginDetailInfo.getChannel());
 
         gtr.setGameLoginType(gameLoginDetailInfo.getType());
-        gtr.setChangeTimestamp(gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli());
+        gtr.setTimestamp(gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli());
         if (gameLoginDetailInfo.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_PASSWORD || gameLoginDetailInfo
             .getType() == SkyDict.GAME_LOGIN_TYPE_EMAIL_PASSWORD) {
             //密码登录, 直接第二步骤.
@@ -181,7 +181,7 @@ public class GameTaskServiceImpl implements GameTaskService {
         c.setPhone(req.getGameLoginAccount());
         c.setState(req.getState());
         c.setQrCode(req.getGameLoginQrcode());
-        c.setChangeTimestamp(req.getChangeTimestamp());
+        c.setTimestamp(req.getTimestamp());
         taskService.gameClientLoginCallback(c);
 
         if (c.getState() == GameLoginState.LOGIN_SUCCESS.getState()) {
@@ -208,7 +208,7 @@ public class GameTaskServiceImpl implements GameTaskService {
             }
             gameClientLoginCallback(req, camiDevicePair);
             var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(camiDevicePair.taskId());
-            if (gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli() == req.getChangeTimestamp()) {
+            if (gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli() == req.getTimestamp()) {
                 //login消息没有更新, 返回空任务信息.
                 GameTaskResp gtr = new GameTaskResp();
                 gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);

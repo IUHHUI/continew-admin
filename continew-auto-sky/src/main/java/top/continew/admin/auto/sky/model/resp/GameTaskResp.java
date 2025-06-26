@@ -73,5 +73,5 @@ public class GameTaskResp implements Serializable {
     private Integer gameLoginStep;
     //用于判断登录信息是否修改.
     @Schema(description = "登录信息修改时间")
-    private Long changeTimestamp;
+    private Long timestamp;
 }

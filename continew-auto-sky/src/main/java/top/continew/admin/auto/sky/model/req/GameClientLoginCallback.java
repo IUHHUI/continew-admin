@@ -63,5 +63,5 @@ public class GameClientLoginCallback implements Serializable {
     private String qrCode;
 
     @Schema(description = "设备当前任务信息change timestamp")
-    private long changeTimestamp;
+    private long timestamp;
 }

@@ -291,7 +291,7 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
             log.error("游戏登录状态不存在. taskId: {}", info.getTaskId());
             return;
         }
-        if (info.getChangeTimestamp() != gameLogging.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli()) {
+        if (info.getTimestamp() != gameLogging.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli()) {
             // gameLogging expire, 然后用户重新提交信息.
             // 时间对不上是可能的, 这时候,应该让云手机重置状态.
             log.error("登录信息timestamp 不相等. callback {}, gameLoginInfo {}", info, gameLogging);
