@@ -383,11 +383,10 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
 
         String device = RunningTaskUtil.getDeviceByTaskId(taskId.toString());
         if (StringUtils.isNotEmpty(device)) {
-            //在running queue 中
-            RunningTaskUtil.set(taskId.toString(), device);
-            log.debug("任务:{}已经存在running queue中", taskId);
+            log.debug("任务:{}已经存在running queue中, 设备{}", taskId, device);
             return;
         }
+        log.debug("任务:{}加入standby queue中, isUrgent {}", taskId, isUrgent);
         if (isUrgent) {
             RedisUtils.zAdd(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId, SkyDict.SCORE_URGENT);
         } else {

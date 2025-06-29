@@ -174,7 +174,13 @@ public class GameTaskServiceImpl implements GameTaskService {
 
     private GameTaskResp dispatchGameLoginTask(DeviceDO deviceDO, GameDeviceStateReq req) {
         if (req.getState() == GameLoginState.INIT.getState()) {
-            return dispatchNewGameLoginTask(deviceDO);
+            String taskIdStr = RunningTaskUtil.getTaskIdByDevice(deviceDO.getDevice());
+            if (StringUtils.isEmpty(taskIdStr)) {
+                return dispatchNewGameLoginTask(deviceDO);
+            } else {
+                //存在任务on running queue.
+                return buildGameLoginTaskByPair(Long.parseLong(taskIdStr));
+            }
         }
 
         if (req.getTaskId() == null || req.getTaskId() == 0) {
