@@ -18,10 +18,10 @@ package top.continew.admin.auto.sky.service.impl;
 
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.continew.admin.auto.sky.model.entity.DeviceDO;
-import top.continew.admin.auto.sky.model.entity.DeviceTaskPair;
 import top.continew.admin.auto.sky.model.entity.GameLoginState;
 import top.continew.admin.auto.sky.model.entity.SkyDict;
 import top.continew.admin.auto.sky.model.req.GameClientLoginCallback;
@@ -30,6 +30,7 @@ import top.continew.admin.auto.sky.model.resp.GameTaskResp;
 import top.continew.admin.auto.sky.service.DeviceService;
 import top.continew.admin.auto.sky.service.GameTaskService;
 import top.continew.admin.auto.sky.service.TaskService;
+import top.continew.admin.auto.sky.util.RunningTaskUtil;
 import top.continew.starter.cache.redisson.util.RedisUtils;
 import top.continew.starter.core.validation.CheckUtils;
 import java.time.ZoneOffset;
@@ -60,14 +61,13 @@ public class GameTaskServiceImpl implements GameTaskService {
         CheckUtils.throwIfNull(deviceDO, "设备更新失败");
         CheckUtils.throwIf(!validState(req.getState()), "上报状态错误.");
 
-        //clean expire task byte deviceUUID. taskId maybe 0 which is init value.
-        var devicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
-        if (devicePair != null) {
-            var info = taskService.getGameLoginDetailInfo(devicePair.getTaskId());
+        String taskIdStr = RunningTaskUtil.getTaskIdByDevice(deviceDO.getDevice());
+        if (StringUtils.isNotEmpty(taskIdStr)) {
+            Long taskId = Long.parseLong(taskIdStr);
+            var info = taskService.getGameLoginDetailInfo(taskId);
             if (info == null) {
-                log.debug("设备: {} devicePari {} had expire.", req.getDevice(), devicePair);
-                // 任务过期, 清理掉.
-                RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, devicePair);
+                log.debug("设备: {} exec taskId {} had expire.", req.getDevice(), taskId);
+                RunningTaskUtil.delete(taskIdStr);
             }
         }
 
@@ -85,23 +85,6 @@ public class GameTaskServiceImpl implements GameTaskService {
         }
     }
 
-    private double getNewMaxScore() {
-        return getNowScore();
-    }
-
-    private double getNowScore() {
-        return System.currentTimeMillis() / 1000d;
-    }
-
-    private DeviceTaskPair getCamiDevicePairByDevice(final String device) {
-        Collection<DeviceTaskPair> list = RedisUtils
-            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0, getNewMaxScore());
-        if (list.isEmpty()) {
-            return null;
-        }
-        return list.stream().filter(pair -> pair.device().equals(device)).findFirst().orElse(null);
-    }
-
     /**
      * 加锁, 避免多个设备被分配了相同cami的登录任务.
      *
@@ -110,8 +93,8 @@ public class GameTaskServiceImpl implements GameTaskService {
      */
     private synchronized GameTaskResp dispatchNewGameLoginTask(DeviceDO deviceDO) {
         //dispatch new work.
-        Collection<Long> taskIds = RedisUtils
-            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0, getNewMaxScore(), 0, 1);
+        Collection<Long> taskIds = RedisUtils.zRangeByScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, 0, RunningTaskUtil
+            .getMaxScore(), 0, 1);
         if (taskIds.isEmpty()) {
             GameTaskResp gtr = new GameTaskResp();
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
@@ -128,20 +111,19 @@ public class GameTaskServiceImpl implements GameTaskService {
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
             return gtr;
         }
-        var pair = new DeviceTaskPair(deviceDO.getDevice(), taskId);
         //添加到运行队列
-        if (RedisUtils.zAdd(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, pair, getNowScore())) {
-            RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId);
-            gameLoginDetailInfo.setDevice(deviceDO.getDevice());
-        }
-        return buildGameLoginTaskByPair(pair);
+        RunningTaskUtil.set(taskId.toString(), deviceDO.getDevice());
+        log.info("GAME_LOGIN_STANDBY_QUEUE remove 任务: {}", taskId);
+        RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId);
+        gameLoginDetailInfo.setDevice(deviceDO.getDevice());
+        return buildGameLoginTaskByPair(taskId);
     }
 
-    private GameTaskResp buildGameLoginTaskByPair(DeviceTaskPair pair) {
+    private GameTaskResp buildGameLoginTaskByPair(long taskId) {
         GameTaskResp gtr = new GameTaskResp();
-        gtr.setTaskId(pair.taskId());
+        gtr.setTaskId(taskId);
         gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
-        var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(pair.taskId());
+        var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(taskId);
         gtr.setGameLoginAccount(gameLoginDetailInfo.getPhone());
         gtr.setGameLoginPassword(gameLoginDetailInfo.getPassword());
         gtr.setGameLoginEmail(gameLoginDetailInfo.getEmail());
@@ -172,10 +154,10 @@ public class GameTaskServiceImpl implements GameTaskService {
         return gtr;
     }
 
-    private void gameClientLoginCallback(GameDeviceStateReq req, DeviceTaskPair deviceTaskPair) {
+    private void gameClientLoginCallback(GameDeviceStateReq req, long taskId, String device) {
         GameClientLoginCallback c = new GameClientLoginCallback();
-        c.setTaskId(deviceTaskPair.taskId());
-        c.setDevice(deviceTaskPair.device());
+        c.setTaskId(taskId);
+        c.setDevice(device);
         c.setChannel(req.getGameLoginChannel());
         c.setType(req.getGameLoginType());
         c.setPhone(req.getGameLoginAccount());
@@ -186,28 +168,49 @@ public class GameTaskServiceImpl implements GameTaskService {
 
         if (c.getState() == GameLoginState.LOGIN_SUCCESS.getState()) {
             //成功的任务移除.
-            RedisUtils.zRemove(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, deviceTaskPair);
+            RunningTaskUtil.delete(String.valueOf(taskId));
         }
     }
 
     private GameTaskResp dispatchGameLoginTask(DeviceDO deviceDO, GameDeviceStateReq req) {
         if (req.getState() == GameLoginState.INIT.getState()) {
             return dispatchNewGameLoginTask(deviceDO);
-        } else if (isStateWorking(req.getState())) {
+        }
+
+        if (req.getTaskId() == null || req.getTaskId() == 0) {
+            log.error("taskId is null or 0. req {}", req);
+            GameTaskResp gtr = new GameTaskResp();
+            gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
+            return gtr;
+        }
+
+        if (isStateWorking(req.getState())) {
             //wait next report. 返回空任务信息.
             GameTaskResp gtr = new GameTaskResp();
             gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
             return gtr;
-        } else if (req.getState() == GameLoginState.LOGIN_FAIL.getState()) {
+        }
+
+        String runningDevice = RunningTaskUtil.getDeviceByTaskId(String.valueOf(req.getTaskId()));
+        if (StringUtils.isEmpty(runningDevice)) {
+            log.warn("task is not running. 下发新任务给设备. req {}", req);
+            // dispatch new task.
+            return dispatchNewGameLoginTask(deviceDO);
+        }
+
+        if (!runningDevice.equals(req.getDevice())) {
+            log.debug("登录任务: {} running on {},  不是当前设备{}", req.getTaskId(), runningDevice, req.getDevice());
+            //清理内存中当前设备的任务信息.
+            RunningTaskUtil.deleteByDevice(req.getDevice());
+            GameTaskResp gtr = new GameTaskResp();
+            gtr.setType(SkyDict.GAME_DEVICE_TYPE_LOGIN);
+            return gtr;
+        }
+
+        if (req.getState() == GameLoginState.LOGIN_FAIL.getState()) {
             //可能由于网络多次上报.
-            var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
-            if (camiDevicePair == null) {
-                log.warn("camiDevicePair is null. 下发新任务给设备. req {}", req);
-                // dispatch new task.
-                return dispatchNewGameLoginTask(deviceDO);
-            }
-            gameClientLoginCallback(req, camiDevicePair);
-            var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(camiDevicePair.taskId());
+            gameClientLoginCallback(req, req.getTaskId(), req.getDevice());
+            var gameLoginDetailInfo = taskService.getGameLoginDetailInfo(req.getTaskId());
             if (gameLoginDetailInfo.getUpdateTime().toInstant(ZoneOffset.UTC).toEpochMilli() == req.getTimestamp()) {
                 //login消息没有更新, 返回空任务信息.
                 GameTaskResp gtr = new GameTaskResp();
@@ -215,26 +218,12 @@ public class GameTaskServiceImpl implements GameTaskService {
                 return gtr;
             }
             //登录消息更新了, 构建新的任务信息.
-            return buildGameLoginTaskByPair(camiDevicePair);
+            return buildGameLoginTaskByPair(req.getTaskId());
         } else if (req.getState() == GameLoginState.LOGGING_1_END.getState()) {
-            var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
-            if (camiDevicePair == null) {
-                log.error("内部错误. camiDevicePair is null. req {}", req);
-                // dispatch new task.
-                return dispatchNewGameLoginTask(deviceDO);
-            }
-
-            gameClientLoginCallback(req, camiDevicePair);
-            return buildGameLoginTaskByPair(camiDevicePair);
+            gameClientLoginCallback(req, req.getTaskId(), req.getDevice());
+            return buildGameLoginTaskByPair(req.getTaskId());
         } else if (req.getState() == GameLoginState.LOGIN_SUCCESS.getState()) {
-            var camiDevicePair = getCamiDevicePairByDevice(deviceDO.getDevice());
-            if (camiDevicePair == null) {
-                log.error("内部错误. camiDevicePair is null. req {}", req);
-                // dispatch new task.
-                return dispatchNewGameLoginTask(deviceDO);
-            }
-
-            gameClientLoginCallback(req, camiDevicePair);
+            gameClientLoginCallback(req, req.getTaskId(), req.getDevice());
             return dispatchNewGameLoginTask(deviceDO);
         } else {
             log.error("未知状态:{}, req {}", req.getState(), req);

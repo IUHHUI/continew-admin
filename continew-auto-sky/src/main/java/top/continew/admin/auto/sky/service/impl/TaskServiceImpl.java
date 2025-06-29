@@ -38,6 +38,7 @@ import top.continew.admin.auto.sky.model.resp.GameLoginResp;
 import top.continew.admin.auto.sky.model.resp.TaskDetailResp;
 import top.continew.admin.auto.sky.model.resp.TaskResp;
 import top.continew.admin.auto.sky.service.TaskService;
+import top.continew.admin.auto.sky.util.RunningTaskUtil;
 import top.continew.admin.system.service.DictItemService;
 import top.continew.starter.cache.redisson.util.RedisUtils;
 import top.continew.starter.core.validation.CheckUtils;
@@ -45,7 +46,6 @@ import top.continew.starter.extension.crud.service.BaseServiceImpl;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -374,22 +374,19 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
         }
     }
 
-    private boolean camiOnGameLoginTask(Long taskId) {
-        if (RedisUtils.zScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId) == null) {
-            return false;
-        }
-
-        Collection<DeviceTaskPair> list = RedisUtils
-            .zRangeByScore(SkyDict.KEY_GAME_LOGIN_RUNNING_QUEUE, 0, Long.MAX_VALUE);
-        if (list.isEmpty()) {
-            return false;
-        }
-        return list.stream().anyMatch(pair -> pair.taskId().equals(taskId));
-    }
-
     private void pushGameLoginTaskToStandby(Long taskId, boolean isUrgent) {
-        if (this.camiOnGameLoginTask(taskId)) {
-            log.warn("task {} is running on login queue.", taskId);
+        if (RedisUtils.zScore(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId) != null) {
+            //在standby queue中
+            log.debug("任务:{}已经存在standby queue中", taskId);
+            return;
+        }
+
+        String device = RunningTaskUtil.getDeviceByTaskId(taskId.toString());
+        if (StringUtils.isNotEmpty(device)) {
+            //在running queue 中
+            RunningTaskUtil.set(taskId.toString(), device);
+            log.debug("任务:{}已经存在running queue中", taskId);
+            return;
         }
         if (isUrgent) {
             RedisUtils.zAdd(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId, SkyDict.SCORE_URGENT);
@@ -397,5 +394,4 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
             RedisUtils.zAdd(SkyDict.KEY_GAME_LOGIN_STANDBY_QUEUE, taskId, SkyDict.SCORE_NORMAL);
         }
     }
-
 }
