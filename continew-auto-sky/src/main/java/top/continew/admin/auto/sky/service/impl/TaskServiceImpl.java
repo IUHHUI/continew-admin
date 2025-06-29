@@ -233,15 +233,36 @@ public class TaskServiceImpl extends BaseServiceImpl<TaskMapper, TaskDO, TaskRes
             .one();
         this.checkGameLoginSubmit(req, camiDO);
 
+        var taskCamiDO = taskCamiMapper.lambdaQuery()
+            .select(TaskCamiDO::getId, TaskCamiDO::getTaskId, TaskCamiDO::getCamiId, TaskCamiDO::getIsSelfCami)
+            .eq(TaskCamiDO::getCamiId, camiDO.getId())
+            .one();
+
         var newGameLogging = new GameLoginDetailInfo();
         BeanUtil.copyProperties(req, newGameLogging);
         newGameLogging.setState(GameLoginState.LOGGING_2.getState());
         newGameLogging.setUpdateTime(LocalDateTime.now());
 
-        var taskCamiDO = taskCamiMapper.lambdaQuery()
-            .select(TaskCamiDO::getId, TaskCamiDO::getTaskId, TaskCamiDO::getCamiId, TaskCamiDO::getIsSelfCami)
-            .eq(TaskCamiDO::getCamiId, camiDO.getId())
-            .one();
+        if (req.getType() == SkyDict.GAME_LOGIN_TYPE_PHONE_SMS) {
+            //短信登录第二阶段, 使用第一阶段的信息填充第二阶段.
+            var oldGameLogging = gameLoginDetailInfoCache.getIfPresent(taskCamiDO.getTaskId());
+            if (oldGameLogging == null) {
+                log.error("没有短信登录第一阶段信息. oldGameLogging is null. req {}", req);
+            }
+            CheckUtils.throwIfNull(oldGameLogging, "短信登录需要先获取验证码");
+            if (oldGameLogging != null) {
+                CheckUtils.throwIf(SkyDict.GAME_LOGIN_TYPE_PHONE_SMS != oldGameLogging.getType(), "短信登录需要先获取验证码");
+                CheckUtils.throwIfNotEqual(req.getPhone(), oldGameLogging.getPhone(), "手机号不一致");
+                newGameLogging.setDevice(oldGameLogging.getDevice());
+                newGameLogging.setState(oldGameLogging.getState());
+                newGameLogging.setChannel(oldGameLogging.getChannel());
+                newGameLogging.setPhone(oldGameLogging.getPhone());
+                if (StringUtils.isNotBlank(oldGameLogging.getSubAccount())) {
+                    newGameLogging.setSubAccount(oldGameLogging.getSubAccount());
+                }
+            }
+        }
+
         gameLoginDetailInfoCache.put(taskCamiDO.getTaskId(), newGameLogging);
         pushGameLoginTaskToStandby(taskCamiDO.getTaskId(), camiDO.getIsUrgent());
     }
