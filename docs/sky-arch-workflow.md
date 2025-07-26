@@ -2,9 +2,12 @@
 ### 后台
 - 源码: https://github.com/IUHHUI/continew-admin/tree/as
 - 负责用户卡密创建, 任务创建, 下发任务
+- 新增加的代码主要在文件夹: continew-auto-sky/src/main/java/top/continew/admin/auto/sky
+- 新增的代码,大部分自动基于sql生成代码, 然后做了修改配置. sql: continew-auto-sky/src/main/resources/sql
 ### 后台的管理页面
 - 源码: https://github.com/IUHHUI/continew-admin-ui/tree/sky
 - 后台的管理页面
+- 新增的页面: sky/src/views/sky
 
 ### 用户登录游戏的页面
 - 源码: https://github.com/IUHHUI/auto_sky/tree/dev
